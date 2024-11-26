@@ -1,0 +1,18 @@
+map       	#picked   	#banned   
+Busan     	1         	6         
+Ilios     	4         	2         
+Oasis     	2         	4         
+Hollywood 	0         	6         
+King's Row	4         	2         
+Midtown   	2         	6         
+Colosseo  	2         	6         
+Esperança	1         	4         
+Runasapi  	4         	2         
+New Junk City	3         	2         
+Suravasa  	3         	5         
+Hanaoka   	0         	0         
+Throne of Anubis	0         	0         
+Circuit Royal	3         	1         
+Watchpoint Gibraltar	4         	5         
+Shambali Monastery	0         	6         
+ * data from 10/08-11/26 

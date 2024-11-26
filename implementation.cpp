@@ -3,11 +3,14 @@
 
 using std::cout, std::cin, std::getline, std::string;
 
+std::string getVal(std::string const & s){
+	return s.substr(s.find('=')+1, s.size() - s.find('=') + 1);
+}
 
 std::vector<string> getInput(std::ifstream & s){
     string input;
     std::vector<string> output;
-    while(getline(s,input)){
+    while(getline(s,input)){	
         output.push_back(input);
     }
     return output;
