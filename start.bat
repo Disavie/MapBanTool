@@ -1,2 +1,2 @@
-python megachungus.py
+python src\megachungus.py
 .\a.exe
