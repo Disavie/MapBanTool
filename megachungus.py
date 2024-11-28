@@ -129,18 +129,21 @@ def main():
     
     open('data.txt','w').close()
     i = 1
+    all_bans = []
     for url in rooms:
         bans = get_data(url)
+        for ban in bans:
+            all_bans.append(ban)
         print("Completed ", i,'/',len(rooms))
         i+=1
-        with open("data.txt","a") as f:
-            for ban in bans:
-                f.write(ban)
-                f.write('\n')
+    with open("data.txt","a") as f:
+        for ban in all_bans:
+            f.write(ban)
+            f.write('\n')
 
     update_config("key",newkey)
-    return
 
 
 
 main()
+quit()
