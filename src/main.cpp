@@ -8,7 +8,6 @@ int main(){
 	std::getline(fs,from_config);
 	std::string key = getVal(from_config);
 	fs >> from_config;
-	std::cout << from_config <<std::endl;
 	int width = std::stoi(getVal(from_config));
 	
 	//int width = 0;
