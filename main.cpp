@@ -5,14 +5,14 @@ int main(){
 	std::fstream fs;
 	fs.open("config.txt");
 	std::string from_config;
+	std::getline(fs,from_config);
+	std::string key = getVal(from_config);
 	fs >> from_config;
 	int width = std::stoi(getVal(from_config));
 	
 	//int width = 0;
 	
 	
-	
-    std::string key;
     std::ofstream output_file_stream;
 
     std::vector<std::tuple<std::string,int,int>> map_data =
@@ -28,32 +28,28 @@ int main(){
 //4 CLASH FLASHPOINT MAPS
 //3 PAYLOAD MAPS
 
-	std::cout << "Enter team to aggregate mapban data : " ;
-    while(getline(std::cin,key)){
-		if(key.empty()) break;
-		std::ifstream input_file_stream("data.txt");
-		std::vector<std::string> list = getInput(input_file_stream);
-		auto end_it = filterInput(list,key);
-		list.erase(end_it,list.end());
-		countPickBan(list,map_data);
+	std::ifstream input_file_stream("data.txt");
+	std::vector<std::string> list = getInput(input_file_stream);
+	auto end_it = filterInput(list,key);
+	list.erase(end_it,list.end());
+	countPickBan(list,map_data);
 		
-		//FORMATTING OUTPUT
-		output_file_stream.open("output_files/"+key+".txt");
-		output_file_stream << std::left  << std::setw(width)<< "map" << '\t'
-							<< std::left << std::setw(width) <<"#picked" << '\t'
-							<< std::left << std::setw(width) <<"#banned" << std::endl; 
-		std::for_each(map_data.begin(),map_data.end(),[&](auto x){
-									output_file_stream << std::left << std::setw(width) <<std::get<0>(x)  << '\t'
-														<< std::left << std::setw(width) << std::get<1>(x) << '\t'
-														<< std::left << std::setw(width) << std::get<2>(x) << std::endl;   
-									});
-		output_file_stream << " * data from 10/08-11/26 " << std::endl;
-		output_file_stream.close();
-		
-		output_file_stream.open("output_files/raw.txt");
-		std::for_each(list.begin(),end_it,[&](auto x){output_file_stream << x << '\n';});
-		output_file_stream.close();
-		std::cout << "Enter team to aggregate mapban data : " ;
-	}
+	//FORMATTING OUTPUT
+	output_file_stream.open("output_files/"+key+".txt");
+	output_file_stream << std::left  << std::setw(width)<< "map" << '\t'
+						<< std::left << std::setw(width) <<"#picked" << '\t'
+						<< std::left << std::setw(width) <<"#banned" << std::endl; 
+	std::for_each(map_data.begin(),map_data.end(),[&](auto x){
+								output_file_stream << std::left << std::setw(width) <<std::get<0>(x)  << '\t'
+													<< std::left << std::setw(width) << std::get<1>(x) << '\t'
+													<< std::left << std::setw(width) << std::get<2>(x) << std::endl;   
+								});
+	output_file_stream << " * data from 10/08-11/26 " << std::endl;
+	output_file_stream.close();
+	
+	output_file_stream.open("output_files/raw.txt");
+	std::for_each(list.begin(),end_it,[&](auto x){output_file_stream << x << '\n';});
+	output_file_stream.close();
+
     return 0;
 }
