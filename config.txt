@@ -1,2 +1,0 @@
-key=NTMR Rotation
-width=20
