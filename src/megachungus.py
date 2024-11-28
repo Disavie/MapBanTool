@@ -11,11 +11,14 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import InvalidArgumentException
+import threading
+
 
 def get_data(url):
 
     options = Options()
-    options.headless = True
+    options.add_argument("--window-position=-2400,-2400")
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
     driver = webdriver.Chrome(options=options)
 
     delay = 2
@@ -29,9 +32,9 @@ def get_data(url):
         vetobutton.click()
         bans = driver.find_elements(By.CLASS_NAME,mapbans_class_name)
     except NoSuchElementException:
-        print("get_data :NoSuchElementException blocked")
+        print("{MapBanTool}\tget_data :NoSuchElementException blocked")
     except TimeoutException:
-        print("get_data : TimeoutException blocked")
+        print("{MapBanTool}\tget_data : TimeoutException blocked")
     finally:
         real_bans = []
         for ban in bans:
@@ -43,7 +46,8 @@ def get_data(url):
 def get_rooms(url):
 
     options = Options()
-    options.headless = True
+    options.add_argument("--window-position=-2400,-2400")
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
     driver = webdriver.Chrome(options=options)
 
     teamname_class_name = 'HeadingBase-sc-63d0bc6b-0.bcBbHa.styles__Nickname-sc-cdc2b4d0-5.gclupW'
@@ -55,9 +59,9 @@ def get_rooms(url):
         myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.XPATH, "//a[contains(@href, '/en/ow2/room/')]")))
         urls = driver.find_elements(By.XPATH, "//a[contains(@href, '/en/ow2/room/')]")
     except NoSuchElementException:
-        print("get_rooms : NoSuchElementException blocked")
+        print("{MapBanTool}\tget_rooms : NoSuchElementException blocked")
     except TimeoutException:
-        print("get_rooms : TimeoutException blocked")
+        print("{MapBanTool}\tget_rooms : TimeoutException blocked")
     finally:
         real_urls = []
         for roomurl in urls:
@@ -73,36 +77,6 @@ def get_rooms(url):
     driver.quit()
     return real_urls
 
-def get_to_team_page(url):
-
-    options = Options()
-    options.headless = True
-    driver = webdriver.Chrome(options=options)
-
-    class_name = 'styles__TeamMetaContainer-sc-a3d63a5e-0.gVFAMq'
-    delay = 5
-    urls_to_team_pages= []
-    driver.get(url)
-    myElem = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, class_name)))
-
-    temps = driver.find_elements(By.CLASS_NAME, class_name)
-
-    partial_link = '//a[contains(@href'
-    teams_class = 'ButtonBase__Wrapper-sc-9fae6077-0.bwdpsX.Button__Base-sc-1203e5b2-0.jOUWgh'
-    close_menu_class = 'styles__Backdrop-sc-f26c4043-0.kEZUJo'
-    i = 0
-    while(i<len(temps) and i < 16):
-  
-        temps[i].click()
-        myElem = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//a[contains(@href, '/en/teams/')]")))
-        elem = driver.find_element(By.XPATH, "//a[contains(@href, '/en/teams/')]")
-        urls_to_team_pages.append(elem.get_attribute("href"))
-        webdriver.ActionChains(driver).send_keys(Keys.ESCAPE).perform()
-        i+=1
-
-    driver.quit()
-    return urls_to_team_pages
-
 def update_config(setting,change):
     with open("src/config.txt",'r') as f:
         config = f.readlines()
@@ -117,12 +91,17 @@ def update_config(setting,change):
             f.write(line)
     return
 
+def print_periodically():
+    while True:
+        print('{MapBanTool}\t.')
+        time.sleep(0.1)
+
 def main():
-    url = input('Enter URL of team to scrape data : \n')
+    url = input('{MapBanTool}\tEnter URL of team to scrape data : \n')
     try:
         rooms = get_rooms(url)
     except InvalidArgumentException:
-        print("Give a valid team URL")
+        print("{MapBanTool}\tGive a valid team URL")
         return
     
     newkey = rooms.pop()
@@ -134,7 +113,7 @@ def main():
         bans = get_data(url)
         for ban in bans:
             all_bans.append(ban)
-        print("Completed ", i,'/',len(rooms))
+        print("{MapBanTool}\tCollected data from ",url,'\t', i,'/',len(rooms))
         i+=1
     with open("src/data.txt","a") as f:
         for ban in all_bans:
@@ -142,6 +121,7 @@ def main():
             f.write('\n')
 
     update_config("key",newkey)
+    print("{MapBanTool}\tCleaning up...")
 
 
 
