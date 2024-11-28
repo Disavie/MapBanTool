@@ -3,11 +3,12 @@
 int main(){
 	
 	std::fstream fs;
-	fs.open("config.txt");
+	fs.open("src/config.txt");
 	std::string from_config;
 	std::getline(fs,from_config);
 	std::string key = getVal(from_config);
 	fs >> from_config;
+	std::cout << from_config <<std::endl;
 	int width = std::stoi(getVal(from_config));
 	
 	//int width = 0;
@@ -28,7 +29,7 @@ int main(){
 //4 CLASH FLASHPOINT MAPS
 //3 PAYLOAD MAPS
 
-	std::ifstream input_file_stream("data.txt");
+	std::ifstream input_file_stream("src/data.txt");
 	std::vector<std::string> list = getInput(input_file_stream);
 	auto end_it = filterInput(list,key);
 	list.erase(end_it,list.end());

@@ -104,7 +104,7 @@ def get_to_team_page(url):
     return urls_to_team_pages
 
 def update_config(setting,change):
-    with open("config.txt",'r') as f:
+    with open("src/config.txt",'r') as f:
         config = f.readlines()
     i = 0
     for s in config:
@@ -112,7 +112,7 @@ def update_config(setting,change):
         if(i != -1):
             break
     config[i] = setting+'='+change +'\n'
-    with open("config.txt",'w') as f:
+    with open("src/config.txt",'w') as f:
         for line in config:
             f.write(line)
     return
@@ -127,7 +127,7 @@ def main():
     
     newkey = rooms.pop()
     
-    open('data.txt','w').close()
+    open('src/data.txt','w').close()
     i = 1
     all_bans = []
     for url in rooms:
@@ -136,7 +136,7 @@ def main():
             all_bans.append(ban)
         print("Completed ", i,'/',len(rooms))
         i+=1
-    with open("data.txt","a") as f:
+    with open("src/data.txt","a") as f:
         for ban in all_bans:
             f.write(ban)
             f.write('\n')
