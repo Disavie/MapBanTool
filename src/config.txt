@@ -1,0 +1,2 @@
+key=Tanuki Tapire
+width=20
