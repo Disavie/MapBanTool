@@ -67,10 +67,10 @@ int main(){
 	//FORMATTING OUTPUT
 	output_file_stream.open("output_files/"+key[0]+".txt");
 	output_file_stream << std::left  << std::setw(width)<< "map" << '\t'
-						<< std::left << std::setw(width) <<"#picked" << '\t'
-						<< std::left << std::setw(width) <<"#banned" << '\t'
-						<< std::left << std::setw(width) <<"win%" << '\t'
-						<< std::left << std::setw(width) <<"#played" << std::endl; 
+						<< std::left << std::setw(width) <<"#picked (recent)" << '\t'
+						<< std::left << std::setw(width) <<"#banned (recent)" << '\t'
+						<< std::left << std::setw(width) <<"win% (lifetime)" << '\t'
+						<< std::left << std::setw(width) <<"#played (lifetime)" << std::endl; 
 	std::for_each(map_pool.begin(),map_pool.end(),[&](auto x){
 									output_file_stream << std::left << std::setw(width) <<x.name  << '\t'
 														<< std::left << std::setw(width) << x.timesPicked << '\t'
