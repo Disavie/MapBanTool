@@ -14,6 +14,7 @@ from selenium.common.exceptions import InvalidArgumentException
 import threading
 import multiprocessing
 import unicodedata
+import os
 
 tempc = "src/cache/temp.cache"
 bans_list = []
