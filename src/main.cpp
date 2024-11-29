@@ -21,7 +21,7 @@ int main(){
     std::ofstream output_file_stream;
 
     std::vector<std::tuple<std::string,int,int>> map_data =
-{{"Busan",0,0},{"Ilios",0,0},{"Oasis",0,0},{"Antarctic Peninsula",0,0},{"Lijang Tower",0,0 },{"Nepal",0,0},{"Samoa",0,0},
+{{"Busan",0,0},{"Ilios",0,0},{"Oasis",0,0},{"Antarctic Peninsula",0,0},{"Lijiang Tower",0,0 },{"Nepal",0,0},{"Samoa",0,0},
 {"Hollywood",0,0}, {"King's Row",0,0}, {"Midtown",0,0},{"Blizzard World",0,0},{"Eichenwalde",0,0},{"Numbani",0,0},{"Parasxo",0,0},
 {"Colosseo",0,0}, {"Esperanxa",0,0}, {"Runasapi",0,0},{"New Queen Street",0,0},
 {"New Junk City",0,0},{"Suravasa",0,0}, {"Hanaoka",0,0}, {"Throne of Anubis",0,0},
