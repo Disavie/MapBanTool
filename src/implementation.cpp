@@ -50,9 +50,9 @@ std::vector<std::string>::iterator filterInput(std::vector<std::string> & vec, s
 }
 
 
-void countPickBan(std::vector<std::string> const & list, std::vector<std::tuple<std::string,int,int>> & maps){
+void countPickBan(std::vector<std::string> const & list, std::vector<map_info> & maps){
     std::for_each(maps.begin(),maps.end(),[&](auto & x){
-                    std::string map = std::get<0>(x);
+                    std::string map = x.name;
                     int pickcount = 0;
                     int bancount = 0;
                     std::for_each(list.begin(),list.end(),[&](auto line){
@@ -67,7 +67,17 @@ void countPickBan(std::vector<std::string> const & list, std::vector<std::tuple<
                                         bancount++;
                                     }
                                     });
-                    std::get<1>(x) = pickcount;
-                    std::get<2>(x) = bancount;
+                    x.timesPicked = pickcount;
+                    x.timesBanned = bancount;
                     });
+}
+
+void sort_data(std::vector<map_info> & map_pool,char c){
+    if(c == 'w'){
+        std::sort(map_pool.begin(),map_pool.end(),[](auto x, auto y){return x.winrate > y.winrate;});
+    }else if(c == 'b'){
+        std::sort(map_pool.begin(),map_pool.end(),[](auto x, auto y){return x.timesBanned > y.timesBanned;});
+    }else if(c == 'p')
+        std::sort(map_pool.begin(),map_pool.end(),[](auto x, auto y){return x.timesPicked > y.timesPicked;});
+
 }

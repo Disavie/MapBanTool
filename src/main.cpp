@@ -1,4 +1,6 @@
 #include "header.hpp"
+#include "map_info.hpp"
+
 
 int main(){
 	
@@ -14,45 +16,68 @@ int main(){
 	fs.close();
 
 	fs.open("mappool.txt");
-	std::vector<std::string> map_pool = getInput(fs);
+	std::vector<std::string> maps = getInput(fs);
 	fs.close();
-	
-	//int width = 0;
+
+	//create map pools
+	fs.open("src/cache/winrates.cache");
+	nlohmann::json jsonData;
+	fs >> jsonData;
+	fs.close(); 
+
+	std::vector<map_info> map_pool;
+	for(std::string map : maps){
+		map_info temp;
+		temp.name = map;
+		temp.timesBanned=0;
+		temp.timesPicked = 0;
+		for (auto& [key, value] : jsonData.items()) {
+			//std::cout << key << ' ' << map << std::endl;
+        	if (map == key) {
+				//std::cout << key << ' ' << value[0] << ' ' << value[1] << std::endl;
+				std::string s = nlohmann::to_string(value[0]);
+				s.erase(remove( s.begin(), s.end(), '\"' ),s.end());
+            	temp.winrate = std::stoi(s);
+
+				s = nlohmann::to_string(value[1]);
+				s.erase(remove( s.begin(), s.end(), '\"' ),s.end());
+				temp.timesPlayed = std::stoi(s);
+        	}
+    	}
+		map_pool.push_back(temp);
+	}
+
+
 	
 	
     std::ofstream output_file_stream;
-
-    std::vector<std::tuple<std::string,int,int>> map_data =
-{{"Busan",0,0},{"Ilios",0,0},{"Oasis",0,0},{"Antarctic Peninsula",0,0},{"Lijiang Tower",0,0 },{"Nepal",0,0},{"Samoa",0,0},
-{"Hollywood",0,0}, {"King's Row",0,0}, {"Midtown",0,0},{"Blizzard World",0,0},{"Eichenwalde",0,0},{"Numbani",0,0},{"Paraiso",0,0},
-{"Colosseo",0,0}, {"Esperanca",0,0}, {"Runasapi",0,0},{"New Queen Street",0,0},
-{"New Junk City",0,0},{"Suravasa",0,0}, {"Hanaoka",0,0}, {"Throne of Anubis",0,0},
-{"Circuit Royal",0,0}, {"Watchpoint Gibraltar",0,0}, {"Shambali Monastery",0,0},{"Dorado",0,0},{"Havana",0,0},{"Junkertown",0,0},{"Route 66",0,0},{"Rialto",0,0}};
-
-//3 KOTH MAPS
-//3 HYBRID
-//3 PUSH MAPS
-//4 CLASH FLASHPOINT MAPS
-//3 PAYLOAD MAPS
-
 	std::ifstream input_file_stream("src/cache/temp.cache");
 	std::vector<std::string> list = getInput(input_file_stream);
 	auto end_it = filterInput(list,key);
 	list.erase(end_it,list.end());
-	countPickBan(list,map_data);
+	countPickBan(list,map_pool);
+	std::cout << "{MapBanTool}\tHow do you want to sort output?\n" <<
+				"{MapBanTool}\tType 'w' to sort by win%, 'b' to sort by #banned, 'p' to sort by #picked\n" <<
+				"{MapBanTool}\t>>> ";
+	char mode;
+	std::cin >> mode;
+
+	sort_data(map_pool,mode);
 		
 	//FORMATTING OUTPUT
 	output_file_stream.open("output_files/"+key[0]+".txt");
 	output_file_stream << std::left  << std::setw(width)<< "map" << '\t'
 						<< std::left << std::setw(width) <<"#picked" << '\t'
-						<< std::left << std::setw(width) <<"#banned" << std::endl; 
-	std::for_each(map_data.begin(),map_data.end(),[&](auto x){
+						<< std::left << std::setw(width) <<"#banned" << '\t'
+						<< std::left << std::setw(width) <<"win%" << '\t'
+						<< std::left << std::setw(width) <<"#played" << std::endl; 
+	std::for_each(map_pool.begin(),map_pool.end(),[&](auto x){
+									output_file_stream << std::left << std::setw(width) <<x.name  << '\t'
+														<< std::left << std::setw(width) << x.timesPicked << '\t'
+														<< std::left << std::setw(width) << x.timesBanned << '\t'
+														<< std::left << std::setw(width) << std::to_string(x.winrate)+" %" <<'\t'
+														<< std::left << std::setw(width) << x.timesPlayed << std::endl;
 
-								if(std::find(map_pool.begin(),map_pool.end(),std::get<0>(x)) != map_pool.end()){
-									output_file_stream << std::left << std::setw(width) <<std::get<0>(x)  << '\t'
-														<< std::left << std::setw(width) << std::get<1>(x) << '\t'
-														<< std::left << std::setw(width) << std::get<2>(x) << std::endl;
-								}   
 							});
 	output_file_stream.close();
 	

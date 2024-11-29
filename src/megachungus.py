@@ -185,40 +185,36 @@ def get_rooms(team_id):
                     print('{MapBanTool}\tAdded '+current_id+' to match_ids')
                     match_ids.append(current_id)
 
-    #checking all unique room ids
-    unique = []
-    count = 0
-    for id in match_ids:
-        if id not in unique:
-            unique.append(id)
-        else:
-            count+=1
-    print("{MapBanTool}\tFound and removed ", count, " duplicates")
+    return match_ids
 
-    with open('src/cache/ids.cache','w') as f:
-        for id in match_ids:
-            f.write(id)
-            f.write('\n')
-    return unique
-
-def get_teamname(team_id):
+def get_winrates(team_id):
     
     global tempc
     key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
     headers = {'Authorization': 'Bearer '+key}
 
-    req_teamURL = 'https://open.faceit.com/data/v4/teams/'+team_id
+    req_teamURL = 'https://open.faceit.com/data/v4/teams/'+team_id+'/stats/ow2'
     response = requests.get(req_teamURL,headers=headers)
     data = response.json()
     with open(tempc,'w') as f:
         json.dump(data,f,indent=3)
-
     f = open(tempc)
     data = json.load(f) #loads file 'f' as a dictionary
     f.close()
-    name = data.get('name')
-    print('{MapBanTool}\tTeam name :',name)
-    return name
+    segments = data.get('segments')
+    allmaps_data = {}
+    for map_info in segments:
+        currentmap_winrate = map_info.get('stats').get('Win rate %')
+        currentmap_timesplayed = map_info.get('stats').get('Matches')
+        currentmap = map_info.get("label")
+        if currentmap == 'Esperance':
+            currentmap = 'Esperanca'
+        allmaps_data[currentmap] = [currentmap_winrate,currentmap_timesplayed]
+
+    with open('src/cache/winrates.cache','w') as f:
+        json.dump(allmaps_data,f,indent=3)
+    return allmaps_data
+
 
 def update_config(setting,change):
     with open("src/config.txt",'r') as f:
@@ -250,6 +246,7 @@ def main():
         amount_of_matches_to_count = 9999
     else:
         amount_of_matches_to_count = int(amount_of_matches_to_count)
+    get_winrates(id)
     rooms = get_rooms(id)
 
     print("{MapBanTool}\tCollected",len(rooms),"room codes")
