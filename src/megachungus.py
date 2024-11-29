@@ -149,7 +149,7 @@ def get_rooms(team_id):
         f = open(tempc,'w')
 
         player_id = player[1]
-        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history"
+        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=50"
         response = requests.get(PLAYER_HISTORY_URL,headers=headers)
         data = response.json()
         json.dump(data,f,indent=3)
