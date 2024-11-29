@@ -5,8 +5,10 @@ int main(){
 	std::ifstream fs;
 	fs.open("src/config.txt");
 	std::string from_config;
+
 	std::getline(fs,from_config);
-	std::string key = getVal(from_config);
+
+	std::vector<std::string> key = parseHelper(getVal(from_config));
 	fs >> from_config;
 	int width = std::stoi(getVal(from_config));
 	fs.close();
@@ -22,8 +24,8 @@ int main(){
 
     std::vector<std::tuple<std::string,int,int>> map_data =
 {{"Busan",0,0},{"Ilios",0,0},{"Oasis",0,0},{"Antarctic Peninsula",0,0},{"Lijiang Tower",0,0 },{"Nepal",0,0},{"Samoa",0,0},
-{"Hollywood",0,0}, {"King's Row",0,0}, {"Midtown",0,0},{"Blizzard World",0,0},{"Eichenwalde",0,0},{"Numbani",0,0},{"Parasxo",0,0},
-{"Colosseo",0,0}, {"Esperanxa",0,0}, {"Runasapi",0,0},{"New Queen Street",0,0},
+{"Hollywood",0,0}, {"King's Row",0,0}, {"Midtown",0,0},{"Blizzard World",0,0},{"Eichenwalde",0,0},{"Numbani",0,0},{"Paraiso",0,0},
+{"Colosseo",0,0}, {"Esperanca",0,0}, {"Runasapi",0,0},{"New Queen Street",0,0},
 {"New Junk City",0,0},{"Suravasa",0,0}, {"Hanaoka",0,0}, {"Throne of Anubis",0,0},
 {"Circuit Royal",0,0}, {"Watchpoint Gibraltar",0,0}, {"Shambali Monastery",0,0},{"Dorado",0,0},{"Havana",0,0},{"Junkertown",0,0},{"Route 66",0,0},{"Rialto",0,0}};
 
@@ -40,7 +42,7 @@ int main(){
 	countPickBan(list,map_data);
 		
 	//FORMATTING OUTPUT
-	output_file_stream.open("output_files/"+key+".txt");
+	output_file_stream.open("output_files/"+key[0]+".txt");
 	output_file_stream << std::left  << std::setw(width)<< "map" << '\t'
 						<< std::left << std::setw(width) <<"#picked" << '\t'
 						<< std::left << std::setw(width) <<"#banned" << std::endl; 
@@ -55,7 +57,7 @@ int main(){
 	output_file_stream.close();
 	
 	output_file_stream.open("output_files/raw.txt");
-	std::for_each(list.begin(),end_it,[&](auto x){output_file_stream << x << '\n';});
+	std::for_each(list.begin(),list.end(),[&](auto x){output_file_stream << x << '\n';});
 	output_file_stream.close();
 
     return 0;

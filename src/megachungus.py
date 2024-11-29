@@ -13,6 +13,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import InvalidArgumentException
 import threading
 import multiprocessing
+import unicodedata
 
 tempc = "src/cache/temp.cache"
 bans_list = []
@@ -20,6 +21,7 @@ lock = threading.Lock()
 gloabal_completion_counter = 0
 rooms = []
 amount_of_matches_to_count = 0
+team_aliases = []
 
 def has_non_unicode_characters(s):
     try:
@@ -29,18 +31,24 @@ def has_non_unicode_characters(s):
         # If encoding fails, it contains non-ASCII characters
         return True
     return False
-def replace_non_ascii_with_x(input_string):
+def convert_to_english(input_string):
     """
-    Replaces any non-ASCII characters in the given string with 'x'.
-
+    Converts non-English characters in a string to their similar English counterparts.
+    
     Args:
-        input_string (str): The string to process.
+        input_string (str): The input string with non-English characters.
 
     Returns:
-        str: A new string with non-ASCII characters replaced by 'x'.
+        str: A string with characters converted to their English counterparts.
     """
-    return ''.join(char if ord(char) < 128 else 'x' for char in input_string)
-
+    # Normalize the string to decompose characters with accents
+    normalized_string = unicodedata.normalize('NFD', input_string)
+    # Filter out diacritical marks (combining marks)
+    english_string = ''.join(
+        char for char in normalized_string if unicodedata.category(char) != 'Mn'
+    )
+    # Return the string in NFC format for proper composition
+    return unicodedata.normalize('NFC', english_string)
 def check_data_cache(url):
     f = open('src/cache/storage.cache','r')
     data = json.load(f)
@@ -61,6 +69,7 @@ def get_data(url):
     global bans_list
     global rooms
     global gloabal_completion_counter
+    
     list = check_data_cache(url)
     if list != -1:
         for elem in list:
@@ -90,17 +99,17 @@ def get_data(url):
     except TimeoutException:
         print("{MapBanTool}\tget_data : TimeoutException blocked")
 
-    with lock:
-        for ban in list:
-            text = ban.text
-            fixed = replace_non_ascii_with_x(text)
-            bans_list.append(fixed)
+    for ban in list:
+        text = ban.text
+        fixed = convert_to_english(text)
+        bans_list.append(fixed)
+
     gloabal_completion_counter+=1
     print('{MapBanTool}\t',gloabal_completion_counter,'/',len(rooms),"Collected data from '",url,"'")
     return_list = []
     for elem in list:
         text = elem.text
-        fixed = replace_non_ascii_with_x(text)
+        fixed = convert_to_english(text)
         return_list.append(fixed)
 
     driver.quit()
@@ -109,7 +118,7 @@ def get_data(url):
 def get_rooms(team_id):
 
     global tempc
-
+    global team_aliases
     input = team_id
 
     key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
@@ -158,11 +167,18 @@ def get_rooms(team_id):
             name_team2 = i.get('teams').get('faction2').get('nickname')
 
             id_team1 = i.get('teams').get('faction1').get('team_id')
-            id_team2 = i.get('teams').get('faction2').get('team_id')    
-            #if i.get('match_id') == '1-13e3fe45-3eec-4555-aeaa-63686685ca67':
-            #    print('{MapBanTool}\tname_team1 :',name_team1,'\tname_team2 :',name_team2)
-            #    print('{MapBanTool}\tid_team1 :',id_team1,'\tid_team2 :',id_team2)
-            #    print(input)
+            id_team2 = i.get('teams').get('faction2').get('team_id') 
+
+            if id_team1 == input:
+                if name_team1 not in team_aliases:
+                    team_aliases.append(name_team1)
+                    print('{MapBanTool}\tFound alias :',name_team1)
+            elif id_team2 == input:
+                if name_team2 not in team_aliases:
+                    team_aliases.append(name_team2)
+                    print('{MapBanTool}\tFound alias :',name_team2)
+
+
             if(id_team1 == input or id_team2 == input):
                 current_id = i.get('match_id')
                 if current_id not in match_ids:
@@ -212,16 +228,20 @@ def update_config(setting,change):
         i = s.find(setting)
         if(i != -1):
             break
-    config[i] = setting+'='+change +'\n'
+    config[i] = setting+'='+str(change)
+    config[i].replace(' ','')
+
     with open("src/config.txt",'w') as f:
         for line in config:
             f.write(line)
+            f.write('\n')
     return
 
 def main():
     global rooms
     global amount_of_matches_to_count
     global tempc
+    global team_aliases
 
     id = input('{MapBanTool}\tEnter id of team to scrape data : \n{MapBanTool}\t>>> ')
     amount_of_matches_to_count = input('{MapBanTool}\tEnter # of matches to sample (type * to get all): \n{MapBanTool}\t>>> ')
@@ -234,7 +254,6 @@ def main():
 
     print("{MapBanTool}\tCollected",len(rooms),"room codes")
 
-    newkey = get_teamname(id)
     dict = {}
     for room_url in rooms:
         room = 'https://www.faceit.com/en/ow2/room/'+room_url
@@ -249,7 +268,7 @@ def main():
             f.write('\n')
     cache_as_dictionary(dict)
 
-    update_config("key",newkey)
+    update_config("key",team_aliases)
     print("{MapBanTool}\tCleaning up...")
 
 main()
