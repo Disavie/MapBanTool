@@ -64,7 +64,6 @@ def get_data(url):
     list = check_data_cache(url)
     if list != -1:
         for elem in list:
-            print('added',elem)
             bans_list.append(elem)
         gloabal_completion_counter+=1
         print('{MapBanTool}\t',gloabal_completion_counter,'/',len(rooms),'Found',url,'data in storage.cache')
