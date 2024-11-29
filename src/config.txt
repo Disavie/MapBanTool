@@ -1,2 +1,2 @@
-key=Tanuki Tapire
+key=Midori
 width=20

@@ -16,6 +16,7 @@ std::vector<string> getInput(std::ifstream & s){
     return output;
 }
 
+
 std::vector<std::string>::iterator filterInput(std::vector<std::string> & vec, std::string const & key){
     if(key == "*") return vec.end();
     auto it = std::remove_if(vec.begin(),vec.end(),[&](auto s){
