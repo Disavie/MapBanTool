@@ -22,7 +22,7 @@ std::vector<std::string> parseHelper(const std::string& input) {
     
     for (size_t i = 0; i < input.size(); ++i) {
         char c = input[i];
-        if (c == '\'' || c == '[' || c == ']' || c == ' ') {
+        if (c == '\'' || c == '[' || c == ']') {
             continue; // Ignore these characters
         } else if (c == ',') {
             result.push_back(current);
