@@ -10,7 +10,6 @@ To use:  <br />
     - open output_files to get the data  <br />
   
 planned features:  <br />
-    - support for n amount of past match resuts from team's stats page  <br />
     - calculating map win%  <br />
     - calculating most likely players to play on a map  <br />
     - a real ui  <br />
