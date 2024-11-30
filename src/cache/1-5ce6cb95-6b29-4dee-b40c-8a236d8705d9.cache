@@ -1,0 +1,31 @@
+{
+   "match_id": "1-5ce6cb95-6b29-4dee-b40c-8a236d8705d9",
+   "date": 1730593041,
+   "maps_played": {
+      "Busan": "e15109d7-0e9b-47b3-a446-6dc8a1fde90c",
+      "Midtown": "e15109d7-0e9b-47b3-a446-6dc8a1fde90c"
+   },
+   "faction1": {
+      "team_id": "e15109d7-0e9b-47b3-a446-6dc8a1fde90c",
+      "picks": [
+         "Busan",
+         "Colosseo"
+      ],
+      "drops": [
+         "Hollywood",
+         "King's Row"
+      ]
+   },
+   "faction2": {
+      "team_id": "7d84d961-92d0-4cbb-8cca-a0a6fd963fee",
+      "picks": [
+         "Midtown"
+      ],
+      "drops": [
+         "Ilios",
+         "Oasis",
+         "Runasapi",
+         "Esperanca"
+      ]
+   }
+}

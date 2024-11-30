@@ -1,0 +1,35 @@
+{
+   "match_id": "1-8f9ab111-c4a3-4edf-82ba-004d6fc68e26",
+   "date": 1717635049,
+   "maps_played": {
+      "Nepal": "6da4fea3-30c2-4e0e-a9c5-447035960bce",
+      "Midtown": "dc443c37-abc3-4e69-9e4c-56f966f64d8b",
+      "Route 66": "dc443c37-abc3-4e69-9e4c-56f966f64d8b"
+   },
+   "faction1": {
+      "team_id": "dc443c37-abc3-4e69-9e4c-56f966f64d8b",
+      "picks": [
+         "Nepal",
+         "Route 66"
+      ],
+      "drops": [
+         "Oasis",
+         "Hollywood",
+         "Eichenwalde",
+         "Junkertown"
+      ]
+   },
+   "faction2": {
+      "team_id": "6da4fea3-30c2-4e0e-a9c5-447035960bce",
+      "picks": [
+         "Midtown"
+      ],
+      "drops": [
+         "Samoa",
+         "Busan",
+         "Paraiso",
+         "Shambali Monastery",
+         "Rialto"
+      ]
+   }
+}

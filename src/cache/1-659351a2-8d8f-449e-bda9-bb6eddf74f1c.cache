@@ -1,0 +1,38 @@
+{
+   "match_id": "1-659351a2-8d8f-449e-bda9-bb6eddf74f1c",
+   "date": 1731381251,
+   "maps_played": {
+      "Ilios": "82148ae2-9a4c-4d20-860d-63060472e297",
+      "Hollywood": "e15109d7-0e9b-47b3-a446-6dc8a1fde90c",
+      "Esperanca": "82148ae2-9a4c-4d20-860d-63060472e297",
+      "New Junk City": "82148ae2-9a4c-4d20-860d-63060472e297"
+   },
+   "faction1": {
+      "team_id": "82148ae2-9a4c-4d20-860d-63060472e297",
+      "picks": [
+         "Ilios",
+         "Esperanca",
+         "Watchpoint Gibraltar"
+      ],
+      "drops": [
+         "Midtown",
+         "King's Row",
+         "Suravasa"
+      ]
+   },
+   "faction2": {
+      "team_id": "e15109d7-0e9b-47b3-a446-6dc8a1fde90c",
+      "picks": [
+         "Hollywood",
+         "New Junk City"
+      ],
+      "drops": [
+         "Oasis",
+         "Busan",
+         "Runasapi",
+         "Colosseo",
+         "Shambali Monastery",
+         "Circuit Royal"
+      ]
+   }
+}

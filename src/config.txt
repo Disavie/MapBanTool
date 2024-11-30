@@ -1,2 +1,0 @@
-key=Midori
-width=20

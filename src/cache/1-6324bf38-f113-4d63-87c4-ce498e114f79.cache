@@ -1,0 +1,34 @@
+{
+   "match_id": "1-6324bf38-f113-4d63-87c4-ce498e114f79",
+   "date": 1709349394,
+   "maps_played": {
+      "Samoa": "6ec39b17-1e07-41df-b720-5a0588b5fcae",
+      "Hollywood": "6ec39b17-1e07-41df-b720-5a0588b5fcae"
+   },
+   "faction1": {
+      "team_id": "6ec39b17-1e07-41df-b720-5a0588b5fcae",
+      "picks": [
+         "Samoa",
+         "Circuit Royal"
+      ],
+      "drops": [
+         "Lijiang Tower",
+         "King's Row",
+         "Blizzard World",
+         "Shambali Monastery"
+      ]
+   },
+   "faction2": {
+      "team_id": "a4c577ec-b00c-4684-be9c-167991640bf1",
+      "picks": [
+         "Hollywood"
+      ],
+      "drops": [
+         "Ilios",
+         "Nepal",
+         "Midtown",
+         "Dorado",
+         "Rialto"
+      ]
+   }
+}

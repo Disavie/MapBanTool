@@ -1,0 +1,33 @@
+{
+   "match_id": "1-7a767ec5-b9f3-41b1-b4c9-c8781325367e",
+   "date": 1719797553,
+   "maps_played": {
+      "Samoa": "dc443c37-abc3-4e69-9e4c-56f966f64d8b",
+      "Shambali Monastery": "dc443c37-abc3-4e69-9e4c-56f966f64d8b"
+   },
+   "faction1": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "Samoa",
+         "New Queen Street"
+      ],
+      "drops": [
+         "Busan",
+         "Rialto",
+         "Route 66"
+      ]
+   },
+   "faction2": {
+      "team_id": "dc443c37-abc3-4e69-9e4c-56f966f64d8b",
+      "picks": [
+         "Shambali Monastery"
+      ],
+      "drops": [
+         "Nepal",
+         "Oasis",
+         "Junkertown",
+         "Esperanca",
+         "Colosseo"
+      ]
+   }
+}

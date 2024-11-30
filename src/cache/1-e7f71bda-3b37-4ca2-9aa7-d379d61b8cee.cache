@@ -1,0 +1,40 @@
+{
+   "match_id": "1-e7f71bda-3b37-4ca2-9aa7-d379d61b8cee",
+   "date": 1732676618,
+   "maps_played": {
+      "Oasis": "16b02cf9-d2b3-4b3a-a3e2-a04785270b45",
+      "Hollywood": "e15109d7-0e9b-47b3-a446-6dc8a1fde90c",
+      "Runasapi": "16b02cf9-d2b3-4b3a-a3e2-a04785270b45",
+      "Suravasa": "16b02cf9-d2b3-4b3a-a3e2-a04785270b45"
+   },
+   "faction1": {
+      "team_id": "e15109d7-0e9b-47b3-a446-6dc8a1fde90c",
+      "picks": [
+         "Oasis",
+         "Runasapi",
+         "Watchpoint Gibraltar"
+      ],
+      "drops": [
+         "Midtown",
+         "King's Row",
+         "New Junk City",
+         "Hanaoka"
+      ]
+   },
+   "faction2": {
+      "team_id": "16b02cf9-d2b3-4b3a-a3e2-a04785270b45",
+      "picks": [
+         "Hollywood",
+         "Suravasa"
+      ],
+      "drops": [
+         "Ilios",
+         "Busan",
+         "Colosseo",
+         "Esperanca",
+         "Throne of Anubis",
+         "Shambali Monastery",
+         "Circuit Royal"
+      ]
+   }
+}

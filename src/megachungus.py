@@ -1,28 +1,19 @@
 import requests
 import json
 import time
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import StaleElementReferenceException
-from selenium.common.exceptions import InvalidArgumentException
 import threading
 import multiprocessing
 import unicodedata
 import os
+import pprint
+from os import listdir
+from os.path import isfile, join
 
 tempc = "src/cache/temp.cache"
-bans_list = []
-lock = threading.Lock()
 gloabal_completion_counter = 0
-rooms = []
-amount_of_matches_to_count = 0
-team_aliases = []
+amount_of_matches_to_count = 999
+teamname = ''
+TEAMIDMEM = ''
 
 def has_non_unicode_characters(s):
     try:
@@ -51,75 +42,163 @@ def convert_to_english(input_string):
     # Return the string in NFC format for proper composition
     return unicodedata.normalize('NFC', english_string)
 def check_data_cache(url):
-    f = open('src/cache/storage.cache','r')
-    data = json.load(f)
+    onlyfiles = [f for f in listdir('src/cache/') if isfile(join('src/cache', f))]
+
+    return f'{url}.cache' in onlyfiles
+def cache_as_dictionary(data):
+    match_id = data.get('match_id')
+    path = f'src/cache/{match_id}.cache'
+    f = open(path,'w')
+    json.dump(data,f,indent = 3)
     f.close()
-    value = data.get(url,-1)
-    return value
+def get_map_pool():
+    f = open('mappool.txt','r')
+    data = f.read()
+    data_into_list = data.split("\n")
+    return data_into_list
 
-def cache_as_dictionary(new_entries):
-    f = open('src/cache/storage.cache','r')
-    dict = json.load(f)
-    f.close()
-    dict.update(new_entries)
-    with open('src/cache/storage.cache','w') as f:
-        json.dump(dict,f,indent=3)
+def retrieve_from_file(file_title,elem1,comparison):
+    f = open(f'src/cache/{file_title}.cache','r')
+    file_data = json.load(f)
 
-def get_data(url):
+    faction_to_get = 'faction1'
+    if file_data['faction2']['team_id'] == comparison:
+        faction_to_get = 'faction2'
+    try:
+        data = file_data[faction_to_get][elem1]
+    except KeyError:
+        print('{MapBanTool}\tKey Error blocked')
+        return []
+    return data
 
-    global bans_list
+def get_data(match_id,team_id):
+
     global rooms
     global gloabal_completion_counter
-    
-    list = check_data_cache(url)
-    if list != -1:
-        for elem in list:
-            bans_list.append(elem)
-        gloabal_completion_counter+=1
-        print('{MapBanTool}\t',gloabal_completion_counter,'/',len(rooms),'Found',url,'data in storage.cache')
-        return list
+    return_dict = {
+                    'picks':[],
+                    'drops':[]
+                    }
 
-    print("{MapBanTool}\t\tCollecting new data")
-    options = Options()
-    options.add_argument("--window-position=-2400,-2400")
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    driver = webdriver.Chrome(options=options)
+    if check_data_cache(match_id):
+        print('{MapBanTool}\tFound data from',match_id,'in cache')
+        picks = retrieve_from_file(match_id,'picks',team_id)
+        drops = retrieve_from_file(match_id,'drops',team_id)
+        return_dict['picks'] = picks
+        return_dict['drops'] = drops
+        return return_dict
 
-    delay = 2
-    mapbans_class_name = 'HistoryItem__Li-sc-dcb0c0ec-0.dfJFLi'
-    veto_history_link_xpath ="//span[@data-testid='mapsVetoHistory']"
-    driver.get(url)
-    list = [] #List of WebElement
+    key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
+    headers = {'Authorization': f'Bearer {key}'}
+    v4base = 'https://open.faceit.com/data/v4'
+    v1base = 'https://api.faceit.com/democracy/v1'
+    url = f"{v4base}/matches/{match_id}"
+
+    response = requests.get(url+'/stats',headers=headers)
+    match_stats = response.json()
     try:
-        myElem = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.XPATH, veto_history_link_xpath)))
-        vetobutton = driver.find_element(By.XPATH,veto_history_link_xpath)
-        vetobutton.click()
-        list = driver.find_elements(By.CLASS_NAME,mapbans_class_name)
-    except NoSuchElementException:
-        print("{MapBanTool}\tget_data :NoSuchElementException blocked")
-    except TimeoutException:
-        print("{MapBanTool}\tget_data : TimeoutException blocked")
+        rounds = match_stats['rounds']
+    except KeyError:
+        return return_dict
 
-    for ban in list:
-        text = ban.text
-        fixed = convert_to_english(text)
-        bans_list.append(fixed)
+    map_winners = {}
+    for round in rounds:
+        winner = round['round_stats']['Winner']
+        map = round['round_stats']['Map']
+        map_winners[map] = winner
 
-    gloabal_completion_counter+=1
-    print('{MapBanTool}\t',gloabal_completion_counter,'/',len(rooms),"Collected data from '",url,"'")
-    return_list = []
-    for elem in list:
-        text = elem.text
-        fixed = convert_to_english(text)
-        return_list.append(fixed)
+    response = requests.get(url,headers=headers)
+    match_data = response.json()
 
-    driver.quit()
-    return return_list
+    temp_map_guids = {}
+    try:
+        entities = match_data['voting']['map']['entities']
+    except KeyError:
+        return return_dict
+    for veto in entities:
+        name = veto['name']
+        if name == 'Esperan\u00e7a':
+            name = convert_to_english(name)
+
+        temp_map_guids[veto['guid']] = name
+    
+    for guid in temp_map_guids:
+        if guid in map_winners:
+            map_winners[temp_map_guids[guid]] = map_winners[guid]
+            map_winners.pop(guid)
+
+    the_juice = {}
+    faction1_id = match_data.get('teams').get('faction1').get('faction_id')
+    faction2_id = match_data.get('teams').get('faction2').get('faction_id')
+
+    faction_to_collect = 'faction1'
+    if team_id == faction2_id:
+        faction_to_collect = 'faction2'
+    try:
+        start_time_unix = match_data['started_at']
+    except KeyError:
+        start_time_unix = 0
+    the_juice['match_id'] = match_id
+    the_juice['date'] = start_time_unix
+    the_juice['maps_played'] = {}
+    for map in map_winners:
+        the_juice['maps_played'][map] = map_winners[map]
+    the_juice['faction1'] = {'team_id':faction1_id,'picks':[],'drops':[]}
+    the_juice['faction2'] = {'team_id':faction2_id,'picks':[],'drops':[]}
+
+
+    url = f"{v1base}/match/{match_id}/history"
+    response = requests.get(url)
+    veto_data = response.json()
+
+
+    tickets = veto_data['payload']['tickets']
+    team1_picks = []
+    team1_bans = []
+    team2_picks = []
+    team2_bans = []
+    for ticket in tickets:
+        entities = ticket['entities']
+        for entity in entities:
+
+            f = open(tempc,'w')
+            json.dump(temp_map_guids,f,indent = 3)
+            f.close()
+            pick_or_drop = entity['status']
+            try:
+                map_for_guid = temp_map_guids[entity['guid']]
+            except KeyError:
+                continue
+            if entity['selected_by'] == 'faction1':
+                match pick_or_drop:
+                    case 'pick':
+                        team1_picks.append(temp_map_guids[entity['guid']])
+                    case 'drop':
+                        team1_bans.append(temp_map_guids[entity['guid']])
+            else:
+                match pick_or_drop:
+                    case 'pick':
+                        team2_picks.append(temp_map_guids[entity['guid']])
+                    case 'drop':
+                        team2_bans.append(temp_map_guids[entity['guid']])
+
+    the_juice['faction1']['picks'] = (team1_picks)
+    the_juice['faction1']['drops'] = (team1_bans)
+    the_juice['faction2']['picks'] = (team2_picks)
+    the_juice['faction2']['drops'] = (team2_bans)
+    print('{MapBanTool}\tCollected data from ',match_id)
+    cache_as_dictionary(the_juice)
+
+    picks = retrieve_from_file(match_id,'picks',team_id)
+    drops = retrieve_from_file(match_id,'drops',team_id)
+    return_dict['picks'] = picks
+    return_dict['drops'] = drops
+    return return_dict
 
 def get_rooms(team_id):
 
     global tempc
-    global team_aliases
+    global teamname
     input = team_id
 
     key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
@@ -134,7 +213,7 @@ def get_rooms(team_id):
     f = open(tempc)
     data = json.load(f) #loads file 'f' as a dictionary
     f.close()
-
+    teamname = data['name']
     players = []
     for i in data['members']:
         players.append([i.get('nickname'),i.get('user_id')])
@@ -149,7 +228,7 @@ def get_rooms(team_id):
         f = open(tempc,'w')
 
         player_id = player[1]
-        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=50"
+        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=100"
         response = requests.get(PLAYER_HISTORY_URL,headers=headers)
         data = response.json()
         json.dump(data,f,indent=3)
@@ -164,21 +243,9 @@ def get_rooms(team_id):
             if len(match_ids) >= amount_of_matches_to_count:
                 flag = True
                 break
-            name_team1 = i.get('teams').get('faction1').get('nickname')
-            name_team2 = i.get('teams').get('faction2').get('nickname')
 
             id_team1 = i.get('teams').get('faction1').get('team_id')
             id_team2 = i.get('teams').get('faction2').get('team_id') 
-
-            if id_team1 == input:
-                if name_team1 not in team_aliases:
-                    team_aliases.append(name_team1)
-                    print('{MapBanTool}\tFound alias :',name_team1)
-            elif id_team2 == input:
-                if name_team2 not in team_aliases:
-                    team_aliases.append(name_team2)
-                    print('{MapBanTool}\tFound alias :',name_team2)
-
 
             if(id_team1 == input or id_team2 == input):
                 current_id = i.get('match_id')
@@ -187,6 +254,34 @@ def get_rooms(team_id):
                     match_ids.append(current_id)
 
     return match_ids
+
+def count_map_wins(match_ids,map_pool,team_id):
+
+    winrates_dict = {}
+    for map in map_pool:
+        #winrates_dict[map][0] win% [1] counts times played [2] counts times won
+        winrates_dict[map] = [0,0,0]
+
+    for match_id in match_ids:
+        try:
+            f = open(f'src/cache/{match_id}.cache')
+        except FileNotFoundError:
+            print('{MapBanTool}\tNo data from '+match_id)
+            continue
+        data = json.load(f)
+        f.close()
+
+        maps_played = data['maps_played']
+        for map in maps_played:
+  
+            if map in map_pool:
+                winrates_dict[map][1]+=1
+                if maps_played[map] == team_id:
+                    winrates_dict[map][2]+=1
+                    perc = winrates_dict[map][2] / winrates_dict[map][1]
+                    winrates_dict[map][0] = format(perc, '.2%')
+
+    return winrates_dict
 
 def get_winrates(team_id):
     
@@ -202,6 +297,7 @@ def get_winrates(team_id):
     f = open(tempc)
     data = json.load(f) #loads file 'f' as a dictionary
     f.close()
+
     segments = data.get('segments')
     allmaps_data = {}
     for map_info in segments:
@@ -215,7 +311,6 @@ def get_winrates(team_id):
     with open('src/cache/winrates.cache','w') as f:
         json.dump(allmaps_data,f,indent=3)
     return allmaps_data
-
 
 def update_config(setting,change):
     with open("src/config.txt",'r') as f:
@@ -234,40 +329,168 @@ def update_config(setting,change):
             f.write('\n')
     return
 
-def main():
+def write_to_output(filename,dict1,dict2):
+    f = open(f'output_files/{filename}.txt', "w")
+
+    # Define fixed column widths
+    col_widths = [25, 10, 10, 10, 10]
+    heading = f"{'Map'.ljust(col_widths[0])}{'#Picked'.ljust(col_widths[1])}{'#Drops'.ljust(col_widths[2])}{'Win%'.ljust(col_widths[3])}{'#Played'.ljust(col_widths[4])}\n"
+    f.write(heading)
+
+    for element in dict1:
+        p =dict1[element]['picks']
+        d =dict1[element]['drops']
+        try:
+            wr = dict2[element][0]
+            tp = dict2[element][1]
+        except KeyError:
+            wr = 'unknown'
+            tp = 'unknown'
+        f.write(
+            f"{element.ljust(col_widths[0])}"
+            f"{str(p).ljust(col_widths[1])}"
+            f"{str(d).ljust(col_widths[2])}"
+            f"{str(wr).ljust(col_widths[3])}"
+            f"{str(tp).ljust(col_widths[4])}\n"
+        )
+
+    f.close()
+
+def delete_all_files(directory):
+    try:
+        # Iterate over all files in the directory
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            # Check if it's a file and delete it
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+                print(f"Deleted file: {file_path}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+def check_valid(team_id):
+
+    key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
+    headers = {'Authorization': 'Bearer '+key}
+    base = f'https://open.faceit.com/data/v4/teams/{team_id}'
+    response = requests.get(base,headers=headers)
+    return response.status_code
+
+def get_user_input():
+
+    global TEAMIDMEM
+    global amount_of_matches_to_count
+
+    front = '{MapBanTool}\t'
+
+    options = {
+                'help' : f'show all commands',
+                'run' : f'scrape data from team by id',
+                'update' : f'recalculate data using more recent matches',
+                'clear' : f'clears cache',
+                'amount' : f'choose amount of matches to sample (leave blank or * to get all)',
+                'id' : 'update id to get data of',
+                'quit' : 'quits app'
+                }
+
+    inp = input(f'{front}>>> ')
+    if inp == 'run' or inp == 'r':
+        responsecode = check_valid(TEAMIDMEM)
+        if responsecode == 200:
+            main(TEAMIDMEM)
+        else:
+            print(f'{front}Enter a valid team id')
+
+    elif inp == 'update':
+        responsecode = check_valid(TEAMIDMEM)
+        if responsecode == 200:
+            main(TEAMIDMEM)
+        else:
+            print(f'{front}Enter a valid team id')
+    elif inp == 'help':
+        print()
+        for option in options:
+            print(f'\t{option}\t{options[option]}')
+        print()
+    elif inp == 'clear':
+        delete_all_files('src/cache/')
+    elif inp == 'amount':
+        inp = input(f'{front}Enter amount of games to sample\n{front}>>> ')
+        amount_of_matches_to_count = int(inp)
+    elif inp == 'id':
+        print(f'{front}Current id is {TEAMIDMEM}')
+        inp = input(f'{front}Enter team id or leave blank to use current\n{front}>>> ')
+        if inp.strip() != '':
+            TEAMIDMEM = inp
+            print(f'{front}Updated id to {TEAMIDMEM}')
+        else:
+            print(f'{front}Current id is {TEAMIDMEM}')
+
+    elif inp == 'quit' or inp == 'q':
+        exit()
+    else:
+        if inp.strip() == '':
+            return
+        responsecode = check_valid(inp)
+        if responsecode == 200:
+            TEAMIDMEM = inp
+        else:
+            print(f'{front}{inp} os not recognized as a command')
+
+
+
+
+
+    
+def main(team_id):
+    global teamname
     global rooms
     global amount_of_matches_to_count
     global tempc
-    global team_aliases
 
-    id = input('{MapBanTool}\tEnter id of team to scrape data : \n{MapBanTool}\t>>> ')
-    amount_of_matches_to_count = input('{MapBanTool}\tEnter # of matches to sample (type * to get all): \n{MapBanTool}\t>>> ')
+
     print("{MapBanTool}\tCollecting room codes & extracting key")
     if amount_of_matches_to_count == '*':
-        amount_of_matches_to_count = 9999
+        amount_of_matches_to_count = 999
     else:
         amount_of_matches_to_count = int(amount_of_matches_to_count)
-    get_winrates(id)
-    rooms = get_rooms(id)
+
+    rooms = get_rooms(team_id)
 
     print("{MapBanTool}\tCollected",len(rooms),"room codes")
 
-    dict = {}
-    for room_url in rooms:
-        room = 'https://www.faceit.com/en/ow2/room/'+room_url
-        recent_bans = get_data(room)
-        dict[room] = recent_bans
-        
+    dict = {
+            'picks':[],
+            'drops':[]
+            }
     
-    global bans_list
-    with open(tempc,'w') as f:
-        for ban in bans_list:
-            f.write(ban)
-            f.write('\n')
-    cache_as_dictionary(dict)
+    for match_id in rooms:
+        temp = get_data(match_id,team_id)
+        #list1 = temp['picks']
+        #list2 = temp['drops']
+        dict['picks'] += temp['picks']
+        dict['drops'] += temp['drops']
 
-    update_config("key",team_aliases)
+
+    pool = get_map_pool()
+    map_winrates = count_map_wins(rooms,pool,team_id)
+    
+    #counting picks
+    count = 0
+    output_dict = {}
+    for item in pool:
+        output_dict[item] = {}
+        output_dict[item]['picks'] = dict['picks'].count(item)
+        output_dict[item]['drops'] = dict['drops'].count(item)
+
+    write_to_output(teamname,output_dict,map_winrates)
+
+
     print("{MapBanTool}\tCleaning up...")
 
-main()
+
+
+print('{MapBanTool}\tEnter id of team or type help for options')
+while(True):
+    get_user_input()
 quit()

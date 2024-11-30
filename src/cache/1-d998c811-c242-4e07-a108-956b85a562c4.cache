@@ -1,0 +1,41 @@
+{
+   "match_id": "1-d998c811-c242-4e07-a108-956b85a562c4",
+   "date": 1718327573,
+   "maps_played": {
+      "Oasis": "a48a7ac2-a3d7-4817-938b-f9f16e374e97",
+      "Eichenwalde": "dc443c37-abc3-4e69-9e4c-56f966f64d8b",
+      "New Queen Street": "dc443c37-abc3-4e69-9e4c-56f966f64d8b",
+      "Suravasa": "dc443c37-abc3-4e69-9e4c-56f966f64d8b"
+   },
+   "faction1": {
+      "team_id": "dc443c37-abc3-4e69-9e4c-56f966f64d8b",
+      "picks": [
+         "Oasis",
+         "New Queen Street",
+         "Shambali Monastery"
+      ],
+      "drops": [
+         "Busan",
+         "Midtown",
+         "Paraiso",
+         "New Junk City",
+         "Junkertown"
+      ]
+   },
+   "faction2": {
+      "team_id": "a48a7ac2-a3d7-4817-938b-f9f16e374e97",
+      "picks": [
+         "Eichenwalde",
+         "Suravasa"
+      ],
+      "drops": [
+         "Samoa",
+         "Nepal",
+         "Hollywood",
+         "Colosseo",
+         "Esperanca",
+         "Route 66",
+         "Rialto"
+      ]
+   }
+}
