@@ -8,6 +8,7 @@ import os
 import pprint
 from os import listdir
 from os.path import isfile, join
+import sys
 
 tempc = "src/cache/temp.cache"
 gloabal_completion_counter = 0
@@ -427,7 +428,7 @@ def get_user_input():
             print(f'{front}Current id is {TEAMIDMEM}')
 
     elif inp == 'quit' or inp == 'q':
-        exit()
+        sys.exit()
     else:
         if inp.strip() == '':
             return
