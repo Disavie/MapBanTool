@@ -387,7 +387,6 @@ def get_user_input():
     options = {
                 'help' : f'show all commands',
                 'run' : f'scrape data from team by id',
-                'update' : f'recalculate data using more recent matches',
                 'clear' : f'clears cache',
                 'amount' : f'choose amount of matches to sample (leave blank or * to get all)',
                 'id' : 'update id to get data of',
@@ -417,7 +416,10 @@ def get_user_input():
         delete_all_files('src/cache/')
     elif inp == 'amount':
         inp = input(f'{front}Enter amount of games to sample\n{front}>>> ')
-        amount_of_matches_to_count = int(inp)
+        if inp == '*':
+            amount_of_matches_to_count = 999
+        else:
+            amount_of_matches_to_count = int(inp)
     elif inp == 'id':
         print(f'{front}Current id is {TEAMIDMEM}')
         inp = input(f'{front}Enter team id or leave blank to use current\n{front}>>> ')
@@ -436,7 +438,7 @@ def get_user_input():
         if responsecode == 200:
             TEAMIDMEM = inp
         else:
-            print(f'{front}{inp} os not recognized as a command')
+            print(f'{front}{inp} is not recognized as a command')
 
 
 
