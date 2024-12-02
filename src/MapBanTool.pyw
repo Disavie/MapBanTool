@@ -23,6 +23,18 @@ class MyWindow:
             'Circuit Royal','Dorado','Havana','Junkertown','Rialto','Route 66','Shambali Monastery','Watchpoint Gibraltar'
             ]
     presets = [[
+            'Busan','Nepal','Oasis','Samoa',
+            'Eichenwalde','Hollywood','Midtown','Paraiso',
+            'Colosseo','Esperanca','New Queen Street',
+            'New Junk City','Suravasa',
+            'Junkertown','Rialto','Route 66','Shambali Monastery'
+            ],[
+            'Busan','Lijiang Tower','Nepal','Samoa',
+            'Blizzard World','Eichenwalde','King\'s Row','Paraiso',
+            'Colosseo','New Queen Street','Runasapi',
+            'New Junk City','Suravasa',
+            'Circuit Royal','Dorado','Junkertown','Shambali Monastery'
+            ],[
             'Busan','Ilios','Oasis',
             'Hollywood','King\'s Row','Midtown',
             'Colosseo','Esperanca','Runasapi',
@@ -57,7 +69,7 @@ class MyWindow:
         self.label.grid(sticky='w',row=0,column=0)
         self.entry.grid(sticky='w',row=1,column=0)
         self.button.grid(sticky='w',row=1,column=1)
-        self.entry.config(width=50)
+        self.entry.config(width=70)
 
         self.use_cache = tk.BooleanVar(self.root,True)
         self.radiobutton_frame = tk.Frame(self.main_frame)
@@ -100,7 +112,9 @@ class MyWindow:
     
         self.clear_button = tk.Button(self.presets_frame,text='None',command=self.clear_maps)
         self.all_maps = tk.Button(self.presets_frame,text='All',command=lambda : self.set_map_pool(self.ALLMAPS))
-        self.preset_map_pool1 = tk.Button(self.presets_frame,text='FACEIT League S3',command=lambda : self.set_map_pool(self.presets[0]))
+        self.preset_map_pool1 = tk.Button(self.presets_frame,text='FACEIT League S2',command=lambda : self.set_map_pool(self.presets[0]))
+        self.preset_map_pool2 = tk.Button(self.presets_frame,text='FACEIT League S2',command=lambda : self.set_map_pool(self.presets[1]))
+        self.preset_map_pool3 = tk.Button(self.presets_frame,text='FACEIT League S3',command=lambda : self.set_map_pool(self.presets[2]))
 
         for item in self.ALLMAPS:
             self.create_cbox(item)
@@ -109,6 +123,8 @@ class MyWindow:
         self.clear_button.pack(side='left')
         self.all_maps.pack(side='left')
         self.preset_map_pool1.pack(side='left')
+        self.preset_map_pool2.pack(side='left')
+        self.preset_map_pool3.pack(side='left')
 
 
         self.root.mainloop()
@@ -192,16 +208,23 @@ class MyWindow:
                 if map in self.map_pool:
                     output_dict[map]=data[map]
             return output_dict
-        
+        retrieving_label = tk.Label(frame,text='Retrieving match ID\'s...')
+        retrieving_label.place(x=frame.cget('width')/2-100
+                                        ,y=frame.cget('height')/2)
+        self.root.update_idletasks()
+
+
         rooms = megachungus.get_rooms(team_id)
-        loading_graph_progress_bar = Progressbar(frame,
+        retrieving_label.destroy()
+        loading_graph_progress_bar = Progressbar(
+                                                frame,
                                                 orient = 'horizontal',
                                                 length=200,
                                                 mode='determinate',
                                                 max = len(rooms)
                                                 )
         loading_graph_progress_bar.place(x=frame.cget('width')/2-100
-                                              ,y=frame.cget('height')/2)
+                                        ,y=frame.cget('height')/2)
         dict = {
             'picks':[],
             'drops':[]
