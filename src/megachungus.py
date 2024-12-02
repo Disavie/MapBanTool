@@ -13,14 +13,33 @@ import re
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import matplotlib as mpl
 
 
 tempc = "cache/temp.cache"
 gloabal_completion_counter = 0
-amount_of_matches_to_count = 15
+amount_of_matches_to_count = 999
 teamname = ''
 TEAMIDMEM = ''
 
+def delete_file(file_path):
+    """
+    Deletes a specific file if the given path is valid and the file exists.
+    
+    Parameters:
+        file_path (str): The path to the file to be deleted.
+        
+    Returns:
+        str: Success or error message.
+    """
+    try:
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+            return f"File '{file_path}' has been deleted successfully."
+        else:
+            return f"No such file found: '{file_path}'"
+    except Exception as e:
+        return f"An error occurred while trying to delete the file: {e}"
 def has_non_unicode_characters(s):
     try:
         # Attempt to encode the string to ASCII
@@ -226,7 +245,7 @@ def get_rooms(team_id):
             break
 
         player_id = player[1]
-        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=100"
+        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=200"
         response = requests.get(PLAYER_HISTORY_URL,headers=headers)
         data = response.json()
 
@@ -245,7 +264,7 @@ def get_rooms(team_id):
                 if current_id not in match_ids:
                     #print('{MapBanTool}\tAdded '+current_id+' to match_ids')
                     match_ids.append(current_id)
-
+    print(len(match_ids))
     return match_ids
 
 def count_map_wins(match_ids,map_pool,team_id):
@@ -442,16 +461,18 @@ def plot_data(data):
     picks = [data[map_]["picks"] for map_ in maps]
     drops = [data[map_]["drops"] for map_ in maps]
     winrates = [data[map_]["winrate"] for map_ in maps]
-    plt.style.use('fast')
+    plt.style.use('seaborn-v0_8-pastel')
 
     # Create the plot
-    fig, ax1 = plt.subplots(figsize=(7, 4),dpi=100)
+    fig, ax1 = plt.subplots(figsize=(6.7, 4),dpi=100)
 
-    # Find the Segoe UI font file
-    font_path = fm.findSystemFonts(fontpaths=None, fontext='ttf')
-    font_path = [path for path in font_path if 'segoeu' in path.lower()][0] 
-    font_prop = fm.FontProperties(fname=font_path)
-    plt.rcParams['font.family'] = font_prop.get_name()
+    # Check if Calibri is available
+    if 'Calibri' in [f.name for f in mpl.font_manager.fontManager.ttflist]:
+        # Set the default font family
+        plt.rcParams['font.family'] = 'Calibri'
+    else:
+        print("Calibri font not found. Using default font.")
+    plt.xticks(fontsize=8)
 
 
     # X-axis positions
@@ -459,24 +480,21 @@ def plot_data(data):
     width = 0.25  # Width of each bar
 
     # Bar chart for picks, drops, and winrate
-    bar1 = ax1.bar(x - width, picks, width, label="Picks", color="blue",edgecolor='black')
-    bar2 = ax1.bar(x, drops, width, label="Drops", color="orange",edgecolor='black')
+    bar1 = ax1.bar(x - width, picks, width, label="Picks", color="skyblue",edgecolor='black')
+    bar2 = ax1.bar(x, drops, width, label="Drops", color="navajowhite",edgecolor='black')
     ax2 = ax1.twinx()
-    bar3 = ax2.bar(x + width, winrates, width, label="Winrate (%)", color="green",edgecolor='black')
+    bar3 = ax2.bar(x + width, winrates, width, label="Winrate (%)", color="mediumseagreen",edgecolor='black')
 
 
     ax1.set_ylabel("Picks/Drops")
     ax1.set_xticks(x)
     ax1.set_xticklabels(maps, rotation=45, ha="right")
-    ax1.grid(axis="y", linestyle="--", alpha=0.7)
+    ax1.grid(axis="y", linestyle="-", alpha=0.5)
 
     # Formatting the second axis
     ax2.set_ylabel("Winrate (%)")
-    ax1.set_alpha(0)
-    ax2.set_alpha(0)
 
     ax1.legend([bar1,bar2,bar3],["Picks","Drops","Win%"],loc='lower left', bbox_to_anchor=(0,1.02,1,0.2),mode='expand',ncol=3)
-
 
     # Title and layout
     plt.tight_layout()
@@ -521,13 +539,15 @@ def main(team_id,map_pool):
             'picks':[],
             'drops':[]
             }
-    
+    count = 0
     for match_id in rooms:
         temp = get_data(match_id,team_id)
         #list1 = temp['picks']
         #list2 = temp['drops']
         dict['picks'] += temp['picks']
         dict['drops'] += temp['drops']
+        count+=1
+    print(count)
 
 
     #pool = get_map_pool()
@@ -539,23 +559,22 @@ def main(team_id,map_pool):
     output_dict_allmaps = {}
 
     for map in ALLMAPS:
+        if map in map_pool:
+            output_dict[map] = {}
+            output_dict[map]['picks'] = dict['picks'].count(map)
+            output_dict[map]['drops'] = dict['drops'].count(map)
         output_dict_allmaps[map] = {}
         output_dict_allmaps[map]['picks'] = dict['picks'].count(map)
         output_dict_allmaps[map]['drops'] = dict['drops'].count(map)
 
-    for item in map_pool:
-        output_dict[item] = {}
-        output_dict[item]['picks'] = dict['picks'].count(item)
-        output_dict[item]['drops'] = dict['drops'].count(item)
 
     #write_to_output(teamname,output_dict,map_winrates)
 
     for map in ALL_MAPWINRATES:
+        if map in map_pool:
+            output_dict[map]['winrate']=map_winrates[map][0]
         output_dict_allmaps[map]['winrate'] = ALL_MAPWINRATES[map][0]
 
-
-    for map in map_winrates:
-        output_dict[map]['winrate'] = map_winrates[map][0]
 
     cache_as_dictionary(team_id,output_dict_allmaps)
 
