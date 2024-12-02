@@ -9,10 +9,15 @@ import pprint
 from os import listdir
 from os.path import isfile, join
 import sys
+import re
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 
-tempc = "src/cache/temp.cache"
+
+tempc = "cache/temp.cache"
 gloabal_completion_counter = 0
-amount_of_matches_to_count = 999
+amount_of_matches_to_count = 15
 teamname = ''
 TEAMIDMEM = ''
 
@@ -43,15 +48,16 @@ def convert_to_english(input_string):
     # Return the string in NFC format for proper composition
     return unicodedata.normalize('NFC', english_string)
 def check_data_cache(url):
-    onlyfiles = [f for f in listdir('src/cache/') if isfile(join('src/cache', f))]
-
+    onlyfiles = [f for f in listdir('cache/') if isfile(join('cache', f))]
     return f'{url}.cache' in onlyfiles
-def cache_as_dictionary(data):
-    match_id = data.get('match_id')
-    path = f'src/cache/{match_id}.cache'
+
+def cache_as_dictionary(filename,data):
+    path = f'cache/{filename}.cache'
     f = open(path,'w')
     json.dump(data,f,indent = 3)
     f.close()
+
+
 def get_map_pool():
     f = open('mappool.txt','r')
     data = f.read()
@@ -59,7 +65,7 @@ def get_map_pool():
     return data_into_list
 
 def retrieve_from_file(file_title,elem1,comparison):
-    f = open(f'src/cache/{file_title}.cache','r')
+    f = open(f'cache/{file_title}.cache','r')
     file_data = json.load(f)
 
     faction_to_get = 'faction1'
@@ -68,7 +74,7 @@ def retrieve_from_file(file_title,elem1,comparison):
     try:
         data = file_data[faction_to_get][elem1]
     except KeyError:
-        print('{MapBanTool}\tKey Error blocked')
+        #print('{MapBanTool}\tKey Error blocked')
         return []
     return data
 
@@ -82,7 +88,7 @@ def get_data(match_id,team_id):
                     }
 
     if check_data_cache(match_id):
-        print('{MapBanTool}\tFound data from',match_id,'in cache')
+        #print('{MapBanTool}\tFound data from',match_id,'in cache')
         picks = retrieve_from_file(match_id,'picks',team_id)
         drops = retrieve_from_file(match_id,'drops',team_id)
         return_dict['picks'] = picks
@@ -162,9 +168,6 @@ def get_data(match_id,team_id):
         entities = ticket['entities']
         for entity in entities:
 
-            f = open(tempc,'w')
-            json.dump(temp_map_guids,f,indent = 3)
-            f.close()
             pick_or_drop = entity['status']
             try:
                 map_for_guid = temp_map_guids[entity['guid']]
@@ -187,8 +190,8 @@ def get_data(match_id,team_id):
     the_juice['faction1']['drops'] = (team1_bans)
     the_juice['faction2']['picks'] = (team2_picks)
     the_juice['faction2']['drops'] = (team2_bans)
-    print('{MapBanTool}\tCollected data from ',match_id)
-    cache_as_dictionary(the_juice)
+    #print('{MapBanTool}\tCollected data from ',match_id)
+    cache_as_dictionary(match_id,the_juice)
 
     picks = retrieve_from_file(match_id,'picks',team_id)
     drops = retrieve_from_file(match_id,'drops',team_id)
@@ -208,12 +211,8 @@ def get_rooms(team_id):
     req_teamURL = 'https://open.faceit.com/data/v4/teams/'+input
     response = requests.get(req_teamURL,headers=headers)
     data = response.json()
-    with open(tempc,'w') as f:
-        json.dump(data,f,indent=3)
+    #pprint.pprint(data)
 
-    f = open(tempc)
-    data = json.load(f) #loads file 'f' as a dictionary
-    f.close()
     teamname = data['name']
     players = []
     for i in data['members']:
@@ -222,22 +221,15 @@ def get_rooms(team_id):
     match_ids = []
     flag = False
     for player in players:
-        print('{MapBanTool}\tFetching data of ',player[0], '(',player[1],')')
+        #print('{MapBanTool}\tFetching data of ',player[0], '(',player[1],')')
         if(flag):
             break
-
-        f = open(tempc,'w')
 
         player_id = player[1]
         PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=100"
         response = requests.get(PLAYER_HISTORY_URL,headers=headers)
         data = response.json()
-        json.dump(data,f,indent=3)
-        f.close()
 
-        f = open(tempc,'r')
-        data = json.load(f)
-        f.close()
 
         for i in data['items']:
  
@@ -251,7 +243,7 @@ def get_rooms(team_id):
             if(id_team1 == input or id_team2 == input):
                 current_id = i.get('match_id')
                 if current_id not in match_ids:
-                    print('{MapBanTool}\tAdded '+current_id+' to match_ids')
+                    #print('{MapBanTool}\tAdded '+current_id+' to match_ids')
                     match_ids.append(current_id)
 
     return match_ids
@@ -265,9 +257,9 @@ def count_map_wins(match_ids,map_pool,team_id):
 
     for match_id in match_ids:
         try:
-            f = open(f'src/cache/{match_id}.cache')
+            f = open(f'cache/{match_id}.cache')
         except FileNotFoundError:
-            print('{MapBanTool}\tNo data from '+match_id)
+            #print('{MapBanTool}\tNo data from '+match_id)
             continue
         data = json.load(f)
         f.close()
@@ -280,7 +272,7 @@ def count_map_wins(match_ids,map_pool,team_id):
                 if maps_played[map] == team_id:
                     winrates_dict[map][2]+=1
                     perc = winrates_dict[map][2] / winrates_dict[map][1]
-                    winrates_dict[map][0] = format(perc, '.2%')
+                    winrates_dict[map][0] = int(perc*100)
 
     return winrates_dict
 
@@ -293,11 +285,6 @@ def get_winrates(team_id):
     req_teamURL = 'https://open.faceit.com/data/v4/teams/'+team_id+'/stats/ow2'
     response = requests.get(req_teamURL,headers=headers)
     data = response.json()
-    with open(tempc,'w') as f:
-        json.dump(data,f,indent=3)
-    f = open(tempc)
-    data = json.load(f) #loads file 'f' as a dictionary
-    f.close()
 
     segments = data.get('segments')
     allmaps_data = {}
@@ -309,12 +296,12 @@ def get_winrates(team_id):
             currentmap = 'Esperanca'
         allmaps_data[currentmap] = [currentmap_winrate,currentmap_timesplayed]
 
-    with open('src/cache/winrates.cache','w') as f:
+    with open('cache/winrates.cache','w') as f:
         json.dump(allmaps_data,f,indent=3)
     return allmaps_data
 
 def update_config(setting,change):
-    with open("src/config.txt",'r') as f:
+    with open("config.txt",'r') as f:
         config = f.readlines()
     i = 0
     for s in config:
@@ -324,7 +311,7 @@ def update_config(setting,change):
     config[i] = setting+'='+str(change)
     config[i].replace(' ','')
 
-    with open("src/config.txt",'w') as f:
+    with open("config.txt",'w') as f:
         for line in config:
             f.write(line)
             f.write('\n')
@@ -365,9 +352,10 @@ def delete_all_files(directory):
             # Check if it's a file and delete it
             if os.path.isfile(file_path):
                 os.remove(file_path)
-                print(f"Deleted file: {file_path}")
+                #print(f"Deleted file: {file_path}")
     except Exception as e:
-        print(f"Error: {e}")
+        pass
+        #print(f"Error: {e}")
 
 def check_valid(team_id):
 
@@ -389,7 +377,7 @@ def get_user_input():
                 'run' : f'scrape data from team by id',
                 'clear' : f'clears cache',
                 'amount' : f'choose amount of matches to sample (leave blank or * to get all)',
-                'id' : 'update id to get data of',
+                'newurl' : 'update url to get data of',
                 'quit' : 'quits app'
                 }
 
@@ -399,60 +387,127 @@ def get_user_input():
         if responsecode == 200:
             main(TEAMIDMEM)
         else:
-            print(f'{front}Enter a valid team id')
+            print(f'{front}Enter a valid team url')
 
     elif inp == 'update':
         responsecode = check_valid(TEAMIDMEM)
         if responsecode == 200:
             main(TEAMIDMEM)
         else:
-            print(f'{front}Enter a valid team id')
+            print(f'{front}Enter a valid team url')
     elif inp == 'help':
         print()
         for option in options:
             print(f'\t{option}\t{options[option]}')
         print()
     elif inp == 'clear':
-        delete_all_files('src/cache/')
+        delete_all_files('cache/')
     elif inp == 'amount':
         inp = input(f'{front}Enter amount of games to sample\n{front}>>> ')
         if inp == '*':
             amount_of_matches_to_count = 999
         else:
             amount_of_matches_to_count = int(inp)
-    elif inp == 'id':
-        print(f'{front}Current id is {TEAMIDMEM}')
-        inp = input(f'{front}Enter team id or leave blank to use current\n{front}>>> ')
+    elif inp == 'newurl':
+        print(f'{front}Current url is {TEAMIDMEM}')
+        inp = input(f'{front}Enter team url or type enter to use current\n{front}>>> ')
         if inp.strip() != '':
-            TEAMIDMEM = inp
-            print(f'{front}Updated id to {TEAMIDMEM}')
+            match = re.search(r'/teams/([a-f0-9-]+)(?:/|$)', inp)
+            url = match.group(1)
+            TEAMIDMEM = url
+            print(f'{front}Updated url to {TEAMIDMEM}')
         else:
-            print(f'{front}Current id is {TEAMIDMEM}')
+            print(f'{front}Current url is {TEAMIDMEM}')
 
     elif inp == 'quit' or inp == 'q':
         sys.exit()
     else:
+
         if inp.strip() == '':
             return
-        responsecode = check_valid(inp)
+        try:
+            responsecode = -1
+            match = re.search(r'/teams/([a-f0-9-]+)(?:/|$)', inp)
+            url = match.group(1)
+            responsecode = check_valid(url)
+        except AttributeError:
+            pass
         if responsecode == 200:
-            TEAMIDMEM = inp
+            TEAMIDMEM = url
         else:
             print(f'{front}{inp} is not recognized as a command')
+def plot_data(data):
+    # Extract data for plotting
+    maps = list(data.keys())
+    picks = [data[map_]["picks"] for map_ in maps]
+    drops = [data[map_]["drops"] for map_ in maps]
+    winrates = [data[map_]["winrate"] for map_ in maps]
+    plt.style.use('fast')
+
+    # Create the plot
+    fig, ax1 = plt.subplots(figsize=(7, 4),dpi=100)
+
+    # Find the Segoe UI font file
+    font_path = fm.findSystemFonts(fontpaths=None, fontext='ttf')
+    font_path = [path for path in font_path if 'segoeu' in path.lower()][0] 
+    font_prop = fm.FontProperties(fname=font_path)
+    plt.rcParams['font.family'] = font_prop.get_name()
 
 
+    # X-axis positions
+    x = np.arange(len(maps))
+    width = 0.25  # Width of each bar
+
+    # Bar chart for picks, drops, and winrate
+    bar1 = ax1.bar(x - width, picks, width, label="Picks", color="blue",edgecolor='black')
+    bar2 = ax1.bar(x, drops, width, label="Drops", color="orange",edgecolor='black')
+    ax2 = ax1.twinx()
+    bar3 = ax2.bar(x + width, winrates, width, label="Winrate (%)", color="green",edgecolor='black')
 
 
+    ax1.set_ylabel("Picks/Drops")
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(maps, rotation=45, ha="right")
+    ax1.grid(axis="y", linestyle="--", alpha=0.7)
 
+    # Formatting the second axis
+    ax2.set_ylabel("Winrate (%)")
+    ax1.set_alpha(0)
+    ax2.set_alpha(0)
+
+    ax1.legend([bar1,bar2,bar3],["Picks","Drops","Win%"],loc='lower left', bbox_to_anchor=(0,1.02,1,0.2),mode='expand',ncol=3)
+
+
+    # Title and layout
+    plt.tight_layout()
+
+    return fig
     
-def main(team_id):
+def main(team_id,map_pool):
     global teamname
     global rooms
     global amount_of_matches_to_count
     global tempc
+    ALLMAPS = [
+            'Antarctic Peninsula','Busan','Ilios','Lijiang Tower','Nepal','Oasis','Samoa',
+            'Blizzard World','Eichenwalde','Hollywood','King\'s Row','Midtown','Numbani','Paraiso',
+            'Colosseo','Esperanca','New Queen Street','Runasapi',
+            'New Junk City','Suravasa',
+            'Hanaoka','Throne of Anubis',
+            'Circuit Royal','Dorado','Havana','Junkertown','Rialto','Route 66','Shambali Monastery','Watchpoint Gibraltar'
+            ]
 
+    if check_data_cache(team_id):
+        f = open(f'cache/{team_id}.cache')
+        data = json.load(f)
+        f.close()
+        output_dict = {}
+        for map in data:
+            if map in map_pool:
+                output_dict[map]=data[map]
+        return output_dict
 
-    print("{MapBanTool}\tCollecting room codes & extracting key")
+    #print("{MapBanTool}\tCollecting room codes & extracting key")
     if amount_of_matches_to_count == '*':
         amount_of_matches_to_count = 999
     else:
@@ -460,7 +515,7 @@ def main(team_id):
 
     rooms = get_rooms(team_id)
 
-    print("{MapBanTool}\tCollected",len(rooms),"room codes")
+    #print("{MapBanTool}\tCollected",len(rooms),"room codes")
 
     dict = {
             'picks':[],
@@ -475,25 +530,35 @@ def main(team_id):
         dict['drops'] += temp['drops']
 
 
-    pool = get_map_pool()
-    map_winrates = count_map_wins(rooms,pool,team_id)
-    
+    #pool = get_map_pool()
+    map_winrates = count_map_wins(rooms,map_pool,team_id)
+    ALL_MAPWINRATES = count_map_wins(rooms,ALLMAPS,team_id)
     #counting picks
     count = 0
     output_dict = {}
-    for item in pool:
+    output_dict_allmaps = {}
+
+    for map in ALLMAPS:
+        output_dict_allmaps[map] = {}
+        output_dict_allmaps[map]['picks'] = dict['picks'].count(map)
+        output_dict_allmaps[map]['drops'] = dict['drops'].count(map)
+
+    for item in map_pool:
         output_dict[item] = {}
         output_dict[item]['picks'] = dict['picks'].count(item)
         output_dict[item]['drops'] = dict['drops'].count(item)
 
-    write_to_output(teamname,output_dict,map_winrates)
+    #write_to_output(teamname,output_dict,map_winrates)
+
+    for map in ALL_MAPWINRATES:
+        output_dict_allmaps[map]['winrate'] = ALL_MAPWINRATES[map][0]
 
 
-    print("{MapBanTool}\tCleaning up...")
+    for map in map_winrates:
+        output_dict[map]['winrate'] = map_winrates[map][0]
 
+    cache_as_dictionary(team_id,output_dict_allmaps)
 
-
-print('{MapBanTool}\tEnter id of team or type help for options')
-while(True):
-    get_user_input()
-quit()
+    #print("{MapBanTool}\tCleaning up...")
+    #print("{MapBanTool}\tResults in output_files/"+teamname+".txt")
+    return output_dict

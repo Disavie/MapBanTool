@@ -1,1 +1,1 @@
-python -m PyInstaller megachungus.py --onefile
+python -m PyInstaller MapBanTool.pyw --onefile
