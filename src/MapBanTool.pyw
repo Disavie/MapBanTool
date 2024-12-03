@@ -7,6 +7,7 @@ import pprint
 from matplotlib.figure import Figure 
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,  NavigationToolbar2Tk) 
 import json
+import threading
 
 class MyWindow:
     default_y_spacing = 0
@@ -14,6 +15,8 @@ class MyWindow:
     pos_helper = [0,default_y_spacing]
     map_pool = []
     data = {}
+    TEMPRESULTS = {'picks':[],'drops':[]}
+    lock = threading.Lock()
     ALLMAPS = [
             'Antarctic Peninsula','Busan','Ilios','Lijiang Tower','Nepal','Oasis','Samoa',
             'Blizzard World','Eichenwalde','Hollywood','King\'s Row','Midtown','Numbani','Paraiso',
@@ -198,6 +201,13 @@ class MyWindow:
         for cbutton in self.checkbuttons:
             self.checkbuttons[cbutton].deselect()
 
+    def get_data_helper(self,match_id,team_id):
+        temp =megachungus.get_data(match_id,team_id)
+        with self.lock:
+            self.TEMPRESULTS['picks']+=temp['picks']
+            self.TEMPRESULTS['drops']+=temp['drops']
+
+
     def chungusmain(self,team_id,frame):
         if megachungus.check_data_cache(team_id):
             f = open(f'cache/{team_id}.cache')
@@ -216,28 +226,19 @@ class MyWindow:
 
         rooms = megachungus.get_rooms(team_id)
         retrieving_label.destroy()
-        loading_graph_progress_bar = Progressbar(
-                                                frame,
-                                                orient = 'horizontal',
-                                                length=200,
-                                                mode='determinate',
-                                                max = len(rooms)
-                                                )
-        loading_graph_progress_bar.place(x=frame.cget('width')/2-100
-                                        ,y=frame.cget('height')/2)
         dict = {
             'picks':[],
             'drops':[]
             }
-        count = 0
+        threads = []
+
         for match_id in rooms:
-            temp = megachungus.get_data(match_id,team_id)
-            dict['picks'] += temp['picks']
-            dict['drops'] += temp['drops']
-            count+=1
-            loading_graph_progress_bar['value'] = loading_graph_progress_bar['value'] + 1
-            self.root.update_idletasks()
-        loading_graph_progress_bar.destroy()
+            thread = threading.Thread(target=self.get_data_helper,args=(match_id,team_id))
+            threads.append(thread)
+            thread.start()        
+
+        for thread in threads:
+            thread.join()
 
         map_winrates = megachungus.count_map_wins(rooms,self.map_pool,team_id)
         ALL_MAPWINRATES = megachungus.count_map_wins(rooms,self.ALLMAPS,team_id)
@@ -249,11 +250,11 @@ class MyWindow:
         for map in self.ALLMAPS:
             if map in self.map_pool:
                 output_dict[map] = {}
-                output_dict[map]['picks'] = dict['picks'].count(map)
-                output_dict[map]['drops'] = dict['drops'].count(map)
+                output_dict[map]['picks'] = self.TEMPRESULTS['picks'].count(map)
+                output_dict[map]['drops'] = self.TEMPRESULTS['drops'].count(map)
             output_dict_allmaps[map] = {}
-            output_dict_allmaps[map]['picks'] = dict['picks'].count(map)
-            output_dict_allmaps[map]['drops'] = dict['drops'].count(map)
+            output_dict_allmaps[map]['picks'] = self.TEMPRESULTS['picks'].count(map)
+            output_dict_allmaps[map]['drops'] = self.TEMPRESULTS['drops'].count(map)
 
 
         for map in ALL_MAPWINRATES:

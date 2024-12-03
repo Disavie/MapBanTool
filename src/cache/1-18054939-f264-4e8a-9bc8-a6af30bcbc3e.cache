@@ -1,0 +1,35 @@
+{
+   "match_id": "1-18054939-f264-4e8a-9bc8-a6af30bcbc3e",
+   "date": 1720403921,
+   "maps_played": {
+      "Nepal": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "Hollywood": "de9c9048-7ae7-4d14-80a5-0cabc6a08e40",
+      "Rialto": "ec69a520-047f-4754-b36e-b0c95e2066ff"
+   },
+   "faction1": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "Nepal",
+         "Rialto"
+      ],
+      "drops": [
+         "Busan",
+         "Midtown",
+         "Eichenwalde",
+         "Shambali Monastery"
+      ]
+   },
+   "faction2": {
+      "team_id": "de9c9048-7ae7-4d14-80a5-0cabc6a08e40",
+      "picks": [
+         "Hollywood"
+      ],
+      "drops": [
+         "Samoa",
+         "Oasis",
+         "Paraiso",
+         "Route 66",
+         "Junkertown"
+      ]
+   }
+}

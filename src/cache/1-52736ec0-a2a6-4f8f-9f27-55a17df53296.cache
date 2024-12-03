@@ -1,0 +1,31 @@
+{
+   "match_id": "1-52736ec0-a2a6-4f8f-9f27-55a17df53296",
+   "date": 1727058893,
+   "maps_played": {
+      "Lijiang Tower": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "King's Row": "ec69a520-047f-4754-b36e-b0c95e2066ff"
+   },
+   "faction1": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "Lijiang Tower",
+         "Rialto"
+      ],
+      "drops": [
+         "Midtown",
+         "Blizzard World"
+      ]
+   },
+   "faction2": {
+      "team_id": "28e1893d-79ef-4a33-9b44-e45ccde22a61",
+      "picks": [
+         "King's Row"
+      ],
+      "drops": [
+         "Ilios",
+         "Nepal",
+         "Watchpoint Gibraltar",
+         "Junkertown"
+      ]
+   }
+}

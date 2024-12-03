@@ -1,0 +1,34 @@
+{
+   "match_id": "1-c2bdd192-32b0-489b-b05e-ac865cc36ec4",
+   "date": 1723596444,
+   "maps_played": {
+      "Nepal": "ce645da5-0f04-45a5-a83e-b4c270bd23b6",
+      "Blizzard World": "ce645da5-0f04-45a5-a83e-b4c270bd23b6"
+   },
+   "faction1": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "Nepal",
+         "Circuit Royal"
+      ],
+      "drops": [
+         "Samoa",
+         "Paraiso",
+         "Eichenwalde",
+         "Dorado"
+      ]
+   },
+   "faction2": {
+      "team_id": "ce645da5-0f04-45a5-a83e-b4c270bd23b6",
+      "picks": [
+         "Blizzard World"
+      ],
+      "drops": [
+         "Lijiang Tower",
+         "Busan",
+         "King's Row",
+         "Shambali Monastery",
+         "Junkertown"
+      ]
+   }
+}

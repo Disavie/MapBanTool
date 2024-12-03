@@ -1,0 +1,31 @@
+{
+   "match_id": "1-0b47ff79-dc43-4d20-abc4-4956d576d124",
+   "date": 1731205564,
+   "maps_played": {
+      "Ilios": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "King's Row": "ec69a520-047f-4754-b36e-b0c95e2066ff"
+   },
+   "faction1": {
+      "team_id": "85656f4c-f6b3-44f2-a2d9-3bd47599a372",
+      "picks": [
+         "Ilios",
+         "Runasapi"
+      ],
+      "drops": [
+         "Midtown",
+         "Hollywood"
+      ]
+   },
+   "faction2": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "King's Row"
+      ],
+      "drops": [
+         "Oasis",
+         "Busan",
+         "Colosseo",
+         "Esperanca"
+      ]
+   }
+}

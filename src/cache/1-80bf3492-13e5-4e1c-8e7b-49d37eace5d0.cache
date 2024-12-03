@@ -1,0 +1,40 @@
+{
+   "match_id": "1-80bf3492-13e5-4e1c-8e7b-49d37eace5d0",
+   "date": 1721180479,
+   "maps_played": {
+      "Samoa": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "King's Row": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "Colosseo": "ec69a520-047f-4754-b36e-b0c95e2066ff"
+   },
+   "faction1": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "Samoa",
+         "Colosseo",
+         "Circuit Royal"
+      ],
+      "drops": [
+         "Busan",
+         "Blizzard World",
+         "Eichenwalde",
+         "New Junk City",
+         "Dorado"
+      ]
+   },
+   "faction2": {
+      "team_id": "638e6f1d-3936-4379-8f90-fdf13f306bd4",
+      "picks": [
+         "King's Row",
+         "Suravasa"
+      ],
+      "drops": [
+         "Lijiang Tower",
+         "Nepal",
+         "Paraiso",
+         "Runasapi",
+         "New Queen Street",
+         "Junkertown",
+         "Shambali Monastery"
+      ]
+   }
+}

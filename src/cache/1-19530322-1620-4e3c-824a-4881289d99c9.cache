@@ -1,0 +1,34 @@
+{
+   "match_id": "1-19530322-1620-4e3c-824a-4881289d99c9",
+   "date": 1711851597,
+   "maps_played": {
+      "Nepal": "884c6326-20d4-4a0b-990d-cee30ba58aa6",
+      "Blizzard World": "884c6326-20d4-4a0b-990d-cee30ba58aa6"
+   },
+   "faction1": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "Nepal",
+         "Circuit Royal"
+      ],
+      "drops": [
+         "Ilios",
+         "Hollywood",
+         "Midtown",
+         "Dorado"
+      ]
+   },
+   "faction2": {
+      "team_id": "884c6326-20d4-4a0b-990d-cee30ba58aa6",
+      "picks": [
+         "Blizzard World"
+      ],
+      "drops": [
+         "Lijiang Tower",
+         "Samoa",
+         "King's Row",
+         "Rialto",
+         "Shambali Monastery"
+      ]
+   }
+}

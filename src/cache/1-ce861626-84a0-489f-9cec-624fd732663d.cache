@@ -1,0 +1,40 @@
+{
+   "match_id": "1-ce861626-84a0-489f-9cec-624fd732663d",
+   "date": 1711061996,
+   "maps_played": {
+      "Nepal": "d566d889-7885-4e74-a9dc-d29c111d2c1e",
+      "Hollywood": "d566d889-7885-4e74-a9dc-d29c111d2c1e",
+      "Esperanca": "d566d889-7885-4e74-a9dc-d29c111d2c1e"
+   },
+   "faction1": {
+      "team_id": "d566d889-7885-4e74-a9dc-d29c111d2c1e",
+      "picks": [
+         "Nepal",
+         "Esperanca",
+         "Circuit Royal"
+      ],
+      "drops": [
+         "Ilios",
+         "King's Row",
+         "Blizzard World",
+         "Suravasa",
+         "Dorado"
+      ]
+   },
+   "faction2": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "Hollywood",
+         "New Junk City"
+      ],
+      "drops": [
+         "Samoa",
+         "Lijiang Tower",
+         "Midtown",
+         "New Queen Street",
+         "Colosseo",
+         "Shambali Monastery",
+         "Rialto"
+      ]
+   }
+}

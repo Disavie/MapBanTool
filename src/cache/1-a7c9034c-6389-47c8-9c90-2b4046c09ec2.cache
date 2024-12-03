@@ -1,0 +1,34 @@
+{
+   "match_id": "1-a7c9034c-6389-47c8-9c90-2b4046c09ec2",
+   "date": 1723601876,
+   "maps_played": {
+      "Lijiang Tower": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "Eichenwalde": "ec69a520-047f-4754-b36e-b0c95e2066ff"
+   },
+   "faction1": {
+      "team_id": "ec69a520-047f-4754-b36e-b0c95e2066ff",
+      "picks": [
+         "Lijiang Tower",
+         "Circuit Royal"
+      ],
+      "drops": [
+         "Busan",
+         "Blizzard World",
+         "Paraiso",
+         "Shambali Monastery"
+      ]
+   },
+   "faction2": {
+      "team_id": "82148ae2-9a4c-4d20-860d-63060472e297",
+      "picks": [
+         "Eichenwalde"
+      ],
+      "drops": [
+         "Samoa",
+         "Nepal",
+         "King's Row",
+         "Junkertown",
+         "Dorado"
+      ]
+   }
+}

@@ -21,6 +21,8 @@ gloabal_completion_counter = 0
 amount_of_matches_to_count = 999
 teamname = ''
 TEAMIDMEM = ''
+glob_match_ids = []
+lock = threading.Lock()
 
 def delete_file(file_path):
     """
@@ -218,10 +220,32 @@ def get_data(match_id,team_id):
     return_dict['drops'] = drops
     return return_dict
 
+def get_rooms_helper(player_id,team_id):
+        global glob_match_ids
+        global lock
+        
+        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=200"
+        key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
+        headers = {'Authorization': 'Bearer '+key}
+        response = requests.get(PLAYER_HISTORY_URL,headers=headers)
+        data = response.json()
+
+
+        for i in data['items']:
+
+            id_team1 = i.get('teams').get('faction1').get('team_id')
+            id_team2 = i.get('teams').get('faction2').get('team_id') 
+
+            if(id_team1 == input or id_team2 == input):
+                current_id = i.get('match_id')
+                if current_id not in glob_match_ids:
+                    with lock:
+                        glob_match_ids.append(current_id)
 def get_rooms(team_id):
 
     global tempc
     global teamname
+    global lock
     input = team_id
 
     key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
@@ -238,32 +262,18 @@ def get_rooms(team_id):
         players.append([i.get('nickname'),i.get('user_id')])
 
     match_ids = []
+    threads = []
     flag = False
     for player in players:
-        #print('{MapBanTool}\tFetching data of ',player[0], '(',player[1],')')
-        if(flag):
-            break
-
         player_id = player[1]
-        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=200"
-        response = requests.get(PLAYER_HISTORY_URL,headers=headers)
-        data = response.json()
+        thread = threading.Thread(target=get_rooms_helper,args=(player_id,team_id))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
 
 
-        for i in data['items']:
- 
-            if len(match_ids) >= amount_of_matches_to_count:
-                flag = True
-                break
-
-            id_team1 = i.get('teams').get('faction1').get('team_id')
-            id_team2 = i.get('teams').get('faction2').get('team_id') 
-
-            if(id_team1 == input or id_team2 == input):
-                current_id = i.get('match_id')
-                if current_id not in match_ids:
-                    #print('{MapBanTool}\tAdded '+current_id+' to match_ids')
-                    match_ids.append(current_id)
     print(len(match_ids))
     return match_ids
 
@@ -294,47 +304,6 @@ def count_map_wins(match_ids,map_pool,team_id):
                     winrates_dict[map][0] = int(perc*100)
 
     return winrates_dict
-
-def get_winrates(team_id):
-    
-    global tempc
-    key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
-    headers = {'Authorization': 'Bearer '+key}
-
-    req_teamURL = 'https://open.faceit.com/data/v4/teams/'+team_id+'/stats/ow2'
-    response = requests.get(req_teamURL,headers=headers)
-    data = response.json()
-
-    segments = data.get('segments')
-    allmaps_data = {}
-    for map_info in segments:
-        currentmap_winrate = map_info.get('stats').get('Win rate %')
-        currentmap_timesplayed = map_info.get('stats').get('Matches')
-        currentmap = map_info.get("label")
-        if currentmap == 'Esperance':
-            currentmap = 'Esperanca'
-        allmaps_data[currentmap] = [currentmap_winrate,currentmap_timesplayed]
-
-    with open('cache/winrates.cache','w') as f:
-        json.dump(allmaps_data,f,indent=3)
-    return allmaps_data
-
-def update_config(setting,change):
-    with open("config.txt",'r') as f:
-        config = f.readlines()
-    i = 0
-    for s in config:
-        i = s.find(setting)
-        if(i != -1):
-            break
-    config[i] = setting+'='+str(change)
-    config[i].replace(' ','')
-
-    with open("config.txt",'w') as f:
-        for line in config:
-            f.write(line)
-            f.write('\n')
-    return
 
 def write_to_output(filename,dict1,dict2):
     f = open(f'output_files/{filename}.txt', "w")
