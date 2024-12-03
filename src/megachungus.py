@@ -71,20 +71,16 @@ def convert_to_english(input_string):
 def check_data_cache(url):
     onlyfiles = [f for f in listdir('cache/') if isfile(join('cache', f))]
     return f'{url}.cache' in onlyfiles
-
 def cache_as_dictionary(filename,data):
     path = f'cache/{filename}.cache'
     f = open(path,'w')
     json.dump(data,f,indent = 3)
     f.close()
-
-
 def get_map_pool():
     f = open('mappool.txt','r')
     data = f.read()
     data_into_list = data.split("\n")
     return data_into_list
-
 def retrieve_from_file(file_title,elem1,comparison):
     f = open(f'cache/{file_title}.cache','r')
     file_data = json.load(f)
@@ -98,7 +94,6 @@ def retrieve_from_file(file_title,elem1,comparison):
         #print('{MapBanTool}\tKey Error blocked')
         return []
     return data
-
 def get_data(match_id,team_id):
 
     global rooms
@@ -219,33 +214,34 @@ def get_data(match_id,team_id):
     return_dict['picks'] = picks
     return_dict['drops'] = drops
     return return_dict
-
 def get_rooms_helper(player_id,team_id):
         global glob_match_ids
         global lock
         
-        PLAYER_HISTORY_URL = "https://open.faceit.com/data/v4/players/"+player_id+"/history?game=ow2,limit=200"
+        PLAYER_HISTORY_URL = f"https://open.faceit.com/data/v4/players/{player_id}/history?game=ow2,limit=200"
         key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
         headers = {'Authorization': 'Bearer '+key}
         response = requests.get(PLAYER_HISTORY_URL,headers=headers)
         data = response.json()
 
-
+        match_ids = []
         for i in data['items']:
 
             id_team1 = i.get('teams').get('faction1').get('team_id')
             id_team2 = i.get('teams').get('faction2').get('team_id') 
 
-            if(id_team1 == input or id_team2 == input):
+            if(id_team1 == team_id or id_team2 == team_id):
                 current_id = i.get('match_id')
-                if current_id not in glob_match_ids:
-                    with lock:
-                        glob_match_ids.append(current_id)
+                if current_id not in match_ids:
+                        match_ids.append(current_id)
+        with lock:
+            glob_match_ids+=match_ids
+
 def get_rooms(team_id):
 
     global tempc
     global teamname
-    global lock
+    global glob_match_ids
     input = team_id
 
     key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
@@ -263,7 +259,6 @@ def get_rooms(team_id):
 
     match_ids = []
     threads = []
-    flag = False
     for player in players:
         player_id = player[1]
         thread = threading.Thread(target=get_rooms_helper,args=(player_id,team_id))
@@ -274,8 +269,7 @@ def get_rooms(team_id):
         thread.join()
 
 
-    print(len(match_ids))
-    return match_ids
+    return glob_match_ids
 
 def count_map_wins(match_ids,map_pool,team_id):
 
@@ -304,7 +298,6 @@ def count_map_wins(match_ids,map_pool,team_id):
                     winrates_dict[map][0] = int(perc*100)
 
     return winrates_dict
-
 def write_to_output(filename,dict1,dict2):
     f = open(f'output_files/{filename}.txt', "w")
 
@@ -331,7 +324,6 @@ def write_to_output(filename,dict1,dict2):
         )
 
     f.close()
-
 def delete_all_files(directory):
     try:
         # Iterate over all files in the directory
@@ -344,7 +336,6 @@ def delete_all_files(directory):
     except Exception as e:
         pass
         #print(f"Error: {e}")
-
 def check_valid(team_id):
 
     key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
@@ -352,7 +343,6 @@ def check_valid(team_id):
     base = f'https://open.faceit.com/data/v4/teams/{team_id}'
     response = requests.get(base,headers=headers)
     return response.status_code
-
 def get_user_input():
 
     global TEAMIDMEM
@@ -431,9 +421,10 @@ def plot_data(data):
     drops = [data[map_]["drops"] for map_ in maps]
     winrates = [data[map_]["winrate"] for map_ in maps]
     plt.style.use('seaborn-v0_8-pastel')
+    plt.style.use('dark_background')
 
     # Create the plot
-    fig, ax1 = plt.subplots(figsize=(6.7, 4),dpi=100)
+    fig, ax1 = plt.subplots(figsize=(6.2, 4),dpi=100)
 
     # Check if Calibri is available
     if 'Calibri' in [f.name for f in mpl.font_manager.fontManager.ttflist]:
@@ -449,10 +440,10 @@ def plot_data(data):
     width = 0.25  # Width of each bar
 
     # Bar chart for picks, drops, and winrate
-    bar1 = ax1.bar(x - width, picks, width, label="Picks", color="skyblue",edgecolor='black')
-    bar2 = ax1.bar(x, drops, width, label="Drops", color="navajowhite",edgecolor='black')
+    bar1 = ax1.bar(x - width, picks, width, label="Picks", color="skyblue")
+    bar2 = ax1.bar(x, drops, width, label="Drops", color="navajowhite")
     ax2 = ax1.twinx()
-    bar3 = ax2.bar(x + width, winrates, width, label="Winrate (%)", color="mediumseagreen",edgecolor='black')
+    bar3 = ax2.bar(x + width, winrates, width, label="Winrate (%)", color="mediumseagreen")
 
 
     ax1.set_ylabel("Picks/Drops")
@@ -464,6 +455,9 @@ def plot_data(data):
     ax2.set_ylabel("Winrate (%)")
 
     ax1.legend([bar1,bar2,bar3],["Picks","Drops","Win%"],loc='lower left', bbox_to_anchor=(0,1.02,1,0.2),mode='expand',ncol=3)
+    ax1.set_facecolor('xkcd:almost black')
+    ax2.set_facecolor('xkcd:almost black')
+    fig.set_facecolor('xkcd:almost black')
 
     # Title and layout
     plt.tight_layout()
@@ -516,7 +510,7 @@ def main(team_id,map_pool):
         dict['picks'] += temp['picks']
         dict['drops'] += temp['drops']
         count+=1
-    print(count)
+
 
 
     #pool = get_map_pool()

@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter.ttk import *
+from tkinter import ttk
+from tkinter.ttk import * 
 import tkinter.messagebox
 import megachungus
 import re
@@ -8,6 +9,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,  NavigationToolbar2Tk) 
 import json
 import threading
+import sv_ttk as stk
+import ctypes
 
 class MyWindow:
     default_y_spacing = 0
@@ -17,6 +20,9 @@ class MyWindow:
     data = {}
     TEMPRESULTS = {'picks':[],'drops':[]}
     lock = threading.Lock()
+    THE_JUICE = {}
+
+
     ALLMAPS = [
             'Antarctic Peninsula','Busan','Ilios','Lijiang Tower','Nepal','Oasis','Samoa',
             'Blizzard World','Eichenwalde','Hollywood','King\'s Row','Midtown','Numbani','Paraiso',
@@ -47,77 +53,79 @@ class MyWindow:
             ],]      
 
     def __init__(self):
-        self.root = tk.Tk()
-        self.root.geometry('700x800')
+        ctypes.windll.shcore.SetProcessDpiAwareness(True)
+        self.root =tk.Tk()
+        self.root.geometry('800x900')
         self.root.title('MapBanTool')
         #self.root.config(bg='default')
+        stk.set_theme('dark')
 
   
 
 
-        self.presetlabel = tk.Label(self.root,text='Presets:')
-        self.main_frame = tk.Frame(
+        self.presetlabel = ttk.Label(self.root,text='Presets:')
+        self.main_frame =ttk.Frame(
                                     self.root,
-                                    height=50,
-                                    width = 670,
+                                    height=60,
+                                    width = 770,
                                     #bg = 'blue'    
                                     )
-        self.main_frame.pack(padx=15,pady=(10,0))
+        self.main_frame.pack(padx=15,pady=(15,0))
         self.main_frame.pack_propagate(False)
-        self.input_frame = tk.Frame(self.main_frame)
+        self.input_frame =ttk.Frame(self.main_frame)
         self.input_frame.pack(side='left')
-        self.button = tk.Button(self.input_frame,text='Run',command=lambda: self.enter_text(chart_frame))
-        self.entry = tk.Entry(self.input_frame,textvariable=input)
-        self.label = tk.Label(self.input_frame,text='Enter team link:')
-        self.label.grid(sticky='w',row=0,column=0)
-        self.entry.grid(sticky='w',row=1,column=0)
-        self.button.grid(sticky='w',row=1,column=1)
-        self.entry.config(width=70)
+        self.button = ttk.Button(self.input_frame,text='Run',command=self.enter_text)
+        self.entry = ttk.Entry(self.input_frame,textvariable=input,font=('Calibri 10'))
+        #self.label = ttk.Label(self.input_frame,text='Enter team link:')
+        #self.label.grid(sticky='w',row=0,column=0)
+        self.entry.config(width=60)
+        self.add_placeholder(self.entry,"Enter team url")
+        self.entry.pack(side='left')
+        self.button.pack(side='left')
 
-        self.use_cache = tk.BooleanVar(self.root,True)
-        self.radiobutton_frame = tk.Frame(self.main_frame)
+        self.use_cache =tk.BooleanVar(self.root,True)
+        self.radiobutton_frame =ttk.Frame(self.main_frame)
         self.radiobutton_frame.pack(side='right')
-        self.radiobutton1 = tk.Radiobutton(self.radiobutton_frame,text='Get new data',variable=self.use_cache,value=False)
-        self.radiobutton2 = tk.Radiobutton(self.radiobutton_frame,text='Use data from save',variable=self.use_cache,value=True)
+        self.radiobutton1 = ttk.Radiobutton(self.radiobutton_frame,text='Get new data',variable=self.use_cache,value=False)
+        self.radiobutton2 = ttk.Radiobutton(self.radiobutton_frame,text='Use data from save',variable=self.use_cache,value=True)
         self.radiobutton2.pack(anchor='w',side='top')
         self.radiobutton1.pack(anchor='w',side='top')
 
 
-        self.map_selection_frame = tk.Frame(
+        self.map_selection_frame =ttk.Frame(
                                     self.root,
-                                    height=170,
-                                    width=670,
+                                    height=250,
+                                    width=770,
                                     relief='sunken',
-                                    bg = 'white',
+                                    #bg = 'white',
                                     borderwidth=3)
         self.map_selection_frame.pack(padx=15,pady=(25,0))
-        self.presets_frame = tk.Frame(
+        self.presets_frame =ttk.Frame(
                                 self.root,
                                 height=20,
-                                width=670,
+                                width=770,
                                 relief='raised',
-                                bg='lightgray',
+                                #bg='lightgray',
                                 #fill = 'x',
                                 borderwidth=3
                                 )
         self.presets_frame.pack(padx=15,pady=0)
-        chart_frame = tk.Frame(self.root,
-                               width=670,
-                               height=400,
-                               bg='white',
+        self.chart_frame =ttk.Frame(self.root,
+                               width=770,
+                               height=500,
                                relief='sunken',
                                borderwidth=3
                                )
-        chart_frame.pack_propagate(False)
-        chart_frame.pack(padx=15,pady=20)
+        #self.chart_frame.pack_propagate(False)
+        self.chart_frame.pack(padx=15,pady=20)
 
 
     
-        self.clear_button = tk.Button(self.presets_frame,text='None',command=self.clear_maps)
-        self.all_maps = tk.Button(self.presets_frame,text='All',command=lambda : self.set_map_pool(self.ALLMAPS))
-        self.preset_map_pool1 = tk.Button(self.presets_frame,text='FACEIT League S2',command=lambda : self.set_map_pool(self.presets[0]))
-        self.preset_map_pool2 = tk.Button(self.presets_frame,text='FACEIT League S2',command=lambda : self.set_map_pool(self.presets[1]))
-        self.preset_map_pool3 = tk.Button(self.presets_frame,text='FACEIT League S3',command=lambda : self.set_map_pool(self.presets[2]))
+        self.clear_button =ttk.Button(self.presets_frame,text='None',command=self.clear_maps)
+        self.all_maps =ttk.Button(self.presets_frame,text='All',command=lambda : self.set_map_pool(self.ALLMAPS))
+        self.preset_map_pool1 =ttk.Button(self.presets_frame,text='FACEIT League S1',command=lambda : self.set_map_pool(self.presets[0]))
+        self.preset_map_pool2 =ttk.Button(self.presets_frame,text='FACEIT League S2',command=lambda : self.set_map_pool(self.presets[1]))
+        self.preset_map_pool3 =ttk.Button(self.presets_frame,text='FACEIT League S3',command=lambda : self.set_map_pool(self.presets[2]))
 
         for item in self.ALLMAPS:
             self.create_cbox(item)
@@ -138,18 +146,20 @@ class MyWindow:
 
     def create_cbox(self,item):
         if item == 'Blizzard World' or item == 'Colosseo' or item == 'New Junk City' or item == 'Circuit Royal':
-            self.pos_helper[0]+=130
+            self.pos_helper[0]+=150
             self.pos_helper = [self.pos_helper[0],self.default_y_spacing]
-        cbox = tk.Checkbutton(
-                self.map_selection_frame,text=item,
+        cbox =ttk.Checkbutton(
+                self.map_selection_frame,
+                text=item,
                 command=lambda: self.toggle_check(cbox),
-                bg='white'
                 )
+        cbox.invoke()
+
         cbox.place(x=self.pos_helper[0],y=self.pos_helper[1])
         self.checkbuttons[item] = cbox
-        self.pos_helper[1]+=20
+        self.pos_helper[1]+=30
 
-    def enter_text(self,frame):
+    def enter_text(self):
         input = self.entry.get()
         if input == '//clear':
             megachungus.delete_all_files('cache/')
@@ -158,48 +168,48 @@ class MyWindow:
             match = re.search(r'/teams/([a-f0-9-]+)(?:/|$)', input)
             url = match.group(1)
         except:
-            tk.messagebox.showinfo('Error',"Enter a valid team url")
+            ttk.messagebox.showinfo('Error',"Enter a valid team url")
             return
 
         if megachungus.check_valid(url):
             if not self.use_cache.get():
                 megachungus.delete_file(f'cache/{url}.cache')
-            data = self.chungusmain(url,frame)
-            self.embed_chart(data,frame)
+            data = self.chungusmain(url)
+            self.embed_chart()
         else:
-            tk.messagebox.showinfo('Error',"Enter a valid team url")
+           ttk.messagebox.showinfo('Error',"Enter a valid team url")
     
     def toggle_check(self,button):
         text = button.cget('text')
         if text in self.map_pool:
-            button.deselect()
+            button.state(['!selected'])
             self.map_pool.remove(text)
         else:
-            button.select()
+            button.state(['selected'])
             self.map_pool.append(text)
 
-    def embed_chart(self,data,frame):
-        for widget in frame.winfo_children():
+    def embed_chart(self):
+        for widget in self.chart_frame.winfo_children():
             widget.destroy()
 
-        fig = megachungus.plot_data(data)
-        canvas = FigureCanvasTkAgg(fig,master=frame)
+        fig = megachungus.plot_data(self.THE_JUICE)
+        canvas = FigureCanvasTkAgg(fig,master=self.chart_frame)
         canvas_widget = canvas.get_tk_widget()
-        canvas_widget.pack()
+        canvas_widget.pack(fill='both',expand='TRUE')
         canvas.draw()
 
     def set_map_pool(self,list):
         self.map_pool = list
         for cbutton in self.checkbuttons:
             if cbutton in list:
-                self.checkbuttons[cbutton].select()
+                self.checkbuttons[cbutton].state(['selected'])
             else:
-                self.checkbuttons[cbutton].deselect()
+                self.checkbuttons[cbutton].state(['!selected'])
 
     def clear_maps(self):
         self.map_pool = []
         for cbutton in self.checkbuttons:
-            self.checkbuttons[cbutton].deselect()
+            self.checkbuttons[cbutton].state(['!selected'])
 
     def get_data_helper(self,match_id,team_id):
         temp =megachungus.get_data(match_id,team_id)
@@ -207,8 +217,26 @@ class MyWindow:
             self.TEMPRESULTS['picks']+=temp['picks']
             self.TEMPRESULTS['drops']+=temp['drops']
 
+    def add_placeholder(self, entry, placeholder, color="gray"):
+        """Add placeholder text to an Entry widget."""
+        def on_focus_in(event):
+            if entry.get() == placeholder:
+                entry.delete(0, tk.END)
+                entry.config(foreground="white")
 
-    def chungusmain(self,team_id,frame):
+        def on_focus_out(event):
+            if not entry.get():
+                entry.insert(0, placeholder)
+                entry.config(foreground=color)
+
+
+        entry.insert(0,placeholder)
+        entry.config(foreground=color)
+        entry.bind("<FocusIn>",on_focus_in)
+        entry.bind("<FocusOut>",on_focus_out)
+
+
+    def chungusmain(self,team_id):
         if megachungus.check_data_cache(team_id):
             f = open(f'cache/{team_id}.cache')
             data = json.load(f)
@@ -217,15 +245,14 @@ class MyWindow:
             for map in data:
                 if map in self.map_pool:
                     output_dict[map]=data[map]
-            return output_dict
-        retrieving_label = tk.Label(frame,text='Retrieving match ID\'s...')
-        retrieving_label.place(x=frame.cget('width')/2-100
-                                        ,y=frame.cget('height')/2)
-        self.root.update_idletasks()
+
+            self.THE_JUICE = output_dict
+            return
+
 
 
         rooms = megachungus.get_rooms(team_id)
-        retrieving_label.destroy()
+
         dict = {
             'picks':[],
             'drops':[]
@@ -264,6 +291,7 @@ class MyWindow:
 
 
         megachungus.cache_as_dictionary(team_id,output_dict_allmaps)
-        return output_dict
+        self.THE_JUICE = output_dict
+        #return output_dict
 
 GUI = MyWindow()
