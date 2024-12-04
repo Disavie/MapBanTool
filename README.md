@@ -1,4 +1,4 @@
-# MapBanTool
+        # MapBanTool
 Tool for FaceIt Overwatch map banning  <br />
 To use:  <br />
         - click MapBanTool  <br />

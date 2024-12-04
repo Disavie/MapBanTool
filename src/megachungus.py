@@ -2,7 +2,6 @@ import requests
 import json
 import time
 import threading
-import multiprocessing
 import unicodedata
 import os
 import pprint
@@ -15,13 +14,14 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import matplotlib as mpl
 
-
-tempc = "cache/temp.cache"
-gloabal_completion_counter = 0
-amount_of_matches_to_count = 999
+CLIENT_API_KEY = '5fde12b7-1660-4565-8f41-85492c4b7479'
+AMOUNT = 100
 teamname = ''
-TEAMIDMEM = ''
 glob_match_ids = []
+glob_results = {
+                'picks':[],
+                'drops':[]
+                }
 lock = threading.Lock()
 
 def delete_file(file_path):
@@ -76,16 +76,16 @@ def cache_as_dictionary(filename,data):
     f = open(path,'w')
     json.dump(data,f,indent = 3)
     f.close()
-def get_map_pool():
-    f = open('mappool.txt','r')
-    data = f.read()
-    data_into_list = data.split("\n")
-    return data_into_list
 def retrieve_from_file(file_title,elem1,comparison):
-    f = open(f'cache/{file_title}.cache','r')
-    file_data = json.load(f)
+    global lock
 
+    with lock:
+        f = open(f'cache/{file_title}.cache','r')
+        file_data = json.load(f)
+        f.close()
     faction_to_get = 'faction1'
+    if comparison == 'TIME':
+        return file_data['date']
     if file_data['faction2']['team_id'] == comparison:
         faction_to_get = 'faction2'
     try:
@@ -94,10 +94,8 @@ def retrieve_from_file(file_title,elem1,comparison):
         #print('{MapBanTool}\tKey Error blocked')
         return []
     return data
-def get_data(match_id,team_id):
+def get_data(match_id,team_id,time_requirement):
 
-    global rooms
-    global gloabal_completion_counter
     return_dict = {
                     'picks':[],
                     'drops':[]
@@ -105,14 +103,17 @@ def get_data(match_id,team_id):
 
     if check_data_cache(match_id):
         #print('{MapBanTool}\tFound data from',match_id,'in cache')
+        time = retrieve_from_file(match_id,'date','TIME')
+        if time < time_requirement:
+            return return_dict
         picks = retrieve_from_file(match_id,'picks',team_id)
         drops = retrieve_from_file(match_id,'drops',team_id)
         return_dict['picks'] = picks
         return_dict['drops'] = drops
         return return_dict
 
-    key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
-    headers = {'Authorization': f'Bearer {key}'}
+    global CLIENT_API_KEY
+    headers = {'Authorization': f'Bearer {CLIENT_API_KEY}'}
     v4base = 'https://open.faceit.com/data/v4'
     v1base = 'https://api.faceit.com/democracy/v1'
     url = f"{v4base}/matches/{match_id}"
@@ -161,6 +162,11 @@ def get_data(match_id,team_id):
         start_time_unix = match_data['started_at']
     except KeyError:
         start_time_unix = 0
+    if start_time_unix < time_requirement:
+        print(f'stopped {match_id} from being collected, it started at the wrong time')
+        return return_dict
+    
+
     the_juice['match_id'] = match_id
     the_juice['date'] = start_time_unix
     the_juice['maps_played'] = {}
@@ -209,24 +215,21 @@ def get_data(match_id,team_id):
     #print('{MapBanTool}\tCollected data from ',match_id)
     cache_as_dictionary(match_id,the_juice)
 
-    picks = retrieve_from_file(match_id,'picks',team_id)
-    drops = retrieve_from_file(match_id,'drops',team_id)
-    return_dict['picks'] = picks
-    return_dict['drops'] = drops
+    return_dict['picks'] = the_juice[faction_to_collect]['picks']
+    return_dict['drops'] = the_juice[faction_to_collect]['drops']
     return return_dict
 def get_rooms_helper(player_id,team_id):
         global glob_match_ids
         global lock
-        
-        PLAYER_HISTORY_URL = f"https://open.faceit.com/data/v4/players/{player_id}/history?game=ow2,limit=200"
-        key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
-        headers = {'Authorization': 'Bearer '+key}
+        global CLIENT_API_KEY
+
+        PLAYER_HISTORY_URL = f"https://open.faceit.com/data/v4/players/{player_id}/history?game=ow2,limit=50"
+        headers = {'Authorization': 'Bearer '+CLIENT_API_KEY}
         response = requests.get(PLAYER_HISTORY_URL,headers=headers)
         data = response.json()
 
         match_ids = []
         for i in data['items']:
-
             id_team1 = i.get('teams').get('faction1').get('team_id')
             id_team2 = i.get('teams').get('faction2').get('team_id') 
 
@@ -234,30 +237,31 @@ def get_rooms_helper(player_id,team_id):
                 current_id = i.get('match_id')
                 if current_id not in match_ids:
                         match_ids.append(current_id)
+
         with lock:
             glob_match_ids+=match_ids
 
 def get_rooms(team_id):
 
-    global tempc
     global teamname
     global glob_match_ids
+    global CLIENT_API_KEY
+    global AMOUNT
     input = team_id
 
-    key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
-    headers = {'Authorization': 'Bearer '+key}
+    headers = {f'Authorization': f'Bearer {CLIENT_API_KEY}'}
 
     req_teamURL = 'https://open.faceit.com/data/v4/teams/'+input
     response = requests.get(req_teamURL,headers=headers)
+    if(response.status_code == 429):
+        quit()
     data = response.json()
-    #pprint.pprint(data)
 
     teamname = data['name']
     players = []
     for i in data['members']:
         players.append([i.get('nickname'),i.get('user_id')])
 
-    match_ids = []
     threads = []
     for player in players:
         player_id = player[1]
@@ -268,10 +272,7 @@ def get_rooms(team_id):
     for thread in threads:
         thread.join()
 
-
-    return glob_match_ids
-
-def count_map_wins(match_ids,map_pool,team_id):
+def count_map_wins(match_ids,map_pool,team_id,time_requirement):
 
     winrates_dict = {}
     for map in map_pool:
@@ -286,6 +287,8 @@ def count_map_wins(match_ids,map_pool,team_id):
             continue
         data = json.load(f)
         f.close()
+        if data['date'] < time_requirement:
+            return winrates_dict
 
         maps_played = data['maps_played']
         for map in maps_played:
@@ -337,90 +340,19 @@ def delete_all_files(directory):
         pass
         #print(f"Error: {e}")
 def check_valid(team_id):
-
+    global CLIENT_API_KEY
     key = '6cd564bf-065b-4715-a59e-4fc060e2737a'
-    headers = {'Authorization': 'Bearer '+key}
+    headers = {'Authorization': 'Bearer '+CLIENT_API_KEY}
     base = f'https://open.faceit.com/data/v4/teams/{team_id}'
     response = requests.get(base,headers=headers)
     return response.status_code
-def get_user_input():
-
-    global TEAMIDMEM
-    global amount_of_matches_to_count
-
-    front = '{MapBanTool}\t'
-
-    options = {
-                'help' : f'show all commands',
-                'run' : f'scrape data from team by id',
-                'clear' : f'clears cache',
-                'amount' : f'choose amount of matches to sample (leave blank or * to get all)',
-                'newurl' : 'update url to get data of',
-                'quit' : 'quits app'
-                }
-
-    inp = input(f'{front}>>> ')
-    if inp == 'run' or inp == 'r':
-        responsecode = check_valid(TEAMIDMEM)
-        if responsecode == 200:
-            main(TEAMIDMEM)
-        else:
-            print(f'{front}Enter a valid team url')
-
-    elif inp == 'update':
-        responsecode = check_valid(TEAMIDMEM)
-        if responsecode == 200:
-            main(TEAMIDMEM)
-        else:
-            print(f'{front}Enter a valid team url')
-    elif inp == 'help':
-        print()
-        for option in options:
-            print(f'\t{option}\t{options[option]}')
-        print()
-    elif inp == 'clear':
-        delete_all_files('cache/')
-    elif inp == 'amount':
-        inp = input(f'{front}Enter amount of games to sample\n{front}>>> ')
-        if inp == '*':
-            amount_of_matches_to_count = 999
-        else:
-            amount_of_matches_to_count = int(inp)
-    elif inp == 'newurl':
-        print(f'{front}Current url is {TEAMIDMEM}')
-        inp = input(f'{front}Enter team url or type enter to use current\n{front}>>> ')
-        if inp.strip() != '':
-            match = re.search(r'/teams/([a-f0-9-]+)(?:/|$)', inp)
-            url = match.group(1)
-            TEAMIDMEM = url
-            print(f'{front}Updated url to {TEAMIDMEM}')
-        else:
-            print(f'{front}Current url is {TEAMIDMEM}')
-
-    elif inp == 'quit' or inp == 'q':
-        sys.exit()
-    else:
-
-        if inp.strip() == '':
-            return
-        try:
-            responsecode = -1
-            match = re.search(r'/teams/([a-f0-9-]+)(?:/|$)', inp)
-            url = match.group(1)
-            responsecode = check_valid(url)
-        except AttributeError:
-            pass
-        if responsecode == 200:
-            TEAMIDMEM = url
-        else:
-            print(f'{front}{inp} is not recognized as a command')
 def plot_data(data):
     # Extract data for plotting
     maps = list(data.keys())
     picks = [data[map_]["picks"] for map_ in maps]
     drops = [data[map_]["drops"] for map_ in maps]
     winrates = [data[map_]["winrate"] for map_ in maps]
-    plt.style.use('seaborn-v0_8-pastel')
+    #plt.style.use('seaborn-v0_8-pastel')
     plt.style.use('dark_background')
 
     # Create the plot
@@ -455,20 +387,29 @@ def plot_data(data):
     ax2.set_ylabel("Winrate (%)")
 
     ax1.legend([bar1,bar2,bar3],["Picks","Drops","Win%"],loc='lower left', bbox_to_anchor=(0,1.02,1,0.2),mode='expand',ncol=3)
-    ax1.set_facecolor('xkcd:almost black')
-    ax2.set_facecolor('xkcd:almost black')
-    fig.set_facecolor('xkcd:almost black')
 
     # Title and layout
     plt.tight_layout()
 
     return fig
+def get_data_helper(match_id,team_id,time_requirement):
+    global lock
+    global glob_results
+    temp =get_data(match_id,team_id,time_requirement)
+    with lock:
+        glob_results['picks']+=temp['picks']
+        glob_results['drops']+=temp['drops']   
+
     
-def main(team_id,map_pool):
+def main(team_id,map_pool,time_requirement):
     global teamname
-    global rooms
-    global amount_of_matches_to_count
-    global tempc
+    global glob_results
+    global glob_match_ids
+    glob_match_ids = []
+    glob_results = {
+                'picks':[],
+                'drops':[]
+                }
     ALLMAPS = [
             'Antarctic Peninsula','Busan','Ilios','Lijiang Tower','Nepal','Oasis','Samoa',
             'Blizzard World','Eichenwalde','Hollywood','King\'s Row','Midtown','Numbani','Paraiso',
@@ -488,59 +429,42 @@ def main(team_id,map_pool):
                 output_dict[map]=data[map]
         return output_dict
 
-    #print("{MapBanTool}\tCollecting room codes & extracting key")
-    if amount_of_matches_to_count == '*':
-        amount_of_matches_to_count = 999
-    else:
-        amount_of_matches_to_count = int(amount_of_matches_to_count)
 
-    rooms = get_rooms(team_id)
+    get_rooms(team_id)
 
-    #print("{MapBanTool}\tCollected",len(rooms),"room codes")
+    
+    threads = []
 
-    dict = {
-            'picks':[],
-            'drops':[]
-            }
-    count = 0
-    for match_id in rooms:
-        temp = get_data(match_id,team_id)
-        #list1 = temp['picks']
-        #list2 = temp['drops']
-        dict['picks'] += temp['picks']
-        dict['drops'] += temp['drops']
-        count+=1
+    for match_id in glob_match_ids:
+        thread = threading.Thread(target=get_data_helper,args=(match_id,team_id,time_requirement))
+        threads.append(thread)
+        thread.start()        
 
+    for thread in threads:
+        thread.join()
 
-
-    #pool = get_map_pool()
-    map_winrates = count_map_wins(rooms,map_pool,team_id)
-    ALL_MAPWINRATES = count_map_wins(rooms,ALLMAPS,team_id)
-    #counting picks
-    count = 0
-    output_dict = {}
+    ALL_MAPWINRATES = count_map_wins(glob_match_ids,ALLMAPS,team_id,time_requirement)
     output_dict_allmaps = {}
 
     for map in ALLMAPS:
-        if map in map_pool:
-            output_dict[map] = {}
-            output_dict[map]['picks'] = dict['picks'].count(map)
-            output_dict[map]['drops'] = dict['drops'].count(map)
         output_dict_allmaps[map] = {}
-        output_dict_allmaps[map]['picks'] = dict['picks'].count(map)
-        output_dict_allmaps[map]['drops'] = dict['drops'].count(map)
+        output_dict_allmaps[map]['picks'] = glob_results['picks'].count(map)
+        output_dict_allmaps[map]['drops'] = glob_results['drops'].count(map)
 
-
-    #write_to_output(teamname,output_dict,map_winrates)
 
     for map in ALL_MAPWINRATES:
-        if map in map_pool:
-            output_dict[map]['winrate']=map_winrates[map][0]
         output_dict_allmaps[map]['winrate'] = ALL_MAPWINRATES[map][0]
 
 
     cache_as_dictionary(team_id,output_dict_allmaps)
 
-    #print("{MapBanTool}\tCleaning up...")
-    #print("{MapBanTool}\tResults in output_files/"+teamname+".txt")
+
+    f = open(f'cache/{team_id}.cache')
+    data = json.load(f)
+    f.close()
+    output_dict = {}
+    for map in data:
+        if map in map_pool:
+            output_dict[map]=data[map]
+
     return output_dict
